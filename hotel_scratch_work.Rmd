@@ -53,8 +53,15 @@ theme_set(theme_minimal())
 ```{r}
 # Reading in the hotel booking demand data
 #setwd("C:/Users/Lori/Desktop/STAT_253")
-hotel_demand<-read.csv("hotel_bookings.csv")
+hotel_demand <- read.csv("hotel_bookings.csv")
 
+# Change variable classes
+hotel_demand <- hotel_demand %>%
+  mutate(
+    is_canceled = as.factor(is_canceled),
+    is_repeated_guest = as.factor(is_repeated_guest),
+  )
+  
 # Divide into training and testing
 set.seed(253)
 hotel_split <- initial_split(hotel_demand, prop = .7, 
@@ -71,17 +78,22 @@ table(hotel_test$is_canceled) %>% prop.table()
 
 ```{r,fig.width=10}
 # First 6 rows of dataset
-head(hotel_demand)
+head(hotel_train)
 
 # Exploratory graphs
-hotel_demand %>% 
+hotel_train %>% 
   ggplot(aes(x=arrival_date_month))+
   geom_bar()
 
 
 # Plot for cancellations
-hotel_demand %>% 
+hotel_train %>% 
   ggplot(aes(x = is_canceled, fill = deposit_type)) +
+  geom_bar(position = "fill") +
+  labs(x = "Is Canceled?", y = "Proportion", fill = "Deposit Type")
+
+hotel_train %>% 
+  ggplot(aes(x = as.factor(is_canceled), fill = deposit_type)) +
   geom_bar(position = "fill") +
   labs(x = "Is Canceled?", y = "Proportion", fill = "Deposit Type")
 ```
