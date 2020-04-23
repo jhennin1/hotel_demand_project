@@ -10,59 +10,79 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r, include=FALSE}
-#plotting and exploring
-library(tidyverse) #for plotting and summarizing
-library(GGally) #for nice scatterplot matrix 
-library(ggridges) #for joy/ridge plots
-library(corrplot) #for basic correlation matrix plot
-library(naniar) #for exploring missing values
-library(pdp) #for partial dependence plots, MARS models
-library(rpart.plot) #for plotting decision trees
-library(vip) #for importance plots
-library(pROC) #for ROC curves
-library(plotROC) #for plotting ROC curves
+# Plotting and exploring
+library(tidyverse)  # For plotting and summarizing
+library(GGally)     # For nice scatterplot matrix 
+library(ggridges)   # For joy/ridge plots
+library(corrplot)   # For basic correlation matrix plot
+library(naniar)     # For exploring missing values
+library(pdp)        # For partial dependence plots, MARS models
+library(rpart.plot) # For plotting decision trees
+library(vip)        # For importance plots
+library(pROC)       # For ROC curves
+library(plotROC)    # For plotting ROC curves
 
-#making things look nice
-library(lubridate) #for nice dates
-library(knitr) #for nice tables
-library(scales) #for nice labels on graphs
-library(gridExtra) #for arranging plots
-library(broom) #for nice model output
-library(janitor) #for nice names
+# Making things look nice
+library(lubridate)  # For nice dates
+library(knitr)      # For nice tables
+library(scales)     # For nice labels on graphs
+library(gridExtra)  # For arranging plots
+library(broom)      # For nice model output
+library(janitor)    # For nice names
 
-#data
-library(ISLR) #for data
-library(moderndive) #for data
-library(rattle) #weather data
-library(fivethirtyeight) #candy data
+# Data
+library(ISLR)             # For data
+library(moderndive)       # For data
+library(rattle)           # Weather data
+library(fivethirtyeight)  # Candy data
 
-#modeling
-library(rsample) #for splitting data
-library(recipes) #for keeping track of transformations
-library(caret) #for modeling
-library(leaps) #for variable selection
-library(glmnet) #for LASSO
-library(earth) #for MARS models
-library(rpart) #for decision trees
-library(randomForest) #for bagging and random forests
+# Modeling
+library(rsample)          # For splitting data
+library(recipes)          # For keeping track of transformations
+library(caret)            # For modeling
+library(leaps)            # For variable selection
+library(glmnet)           # For LASSO
+library(earth)            # For MARS models
+library(rpart)            # For decision trees
+library(randomForest)     # For bagging and random forests
 
 theme_set(theme_minimal())
 ```
 
 
 ```{r}
-# reading in the hotel booking demand data
-setwd("C:/Users/Lori/Desktop/STAT_253")
+# Reading in the hotel booking demand data
+#setwd("C:/Users/Lori/Desktop/STAT_253")
 hotel_demand<-read.csv("hotel_bookings.csv")
+
+# Divide into training and testing
+set.seed(253)
+hotel_split <- initial_split(hotel_demand, prop = .7, 
+                             strata = is_canceled)
+hotel_train <- training(hotel_split)
+hotel_test <- testing(hotel_split)
+
+# Distribution of respone for the training data
+table(hotel_train$is_canceled) %>% prop.table()
+
+# Distribution of respone for testing data
+table(hotel_test$is_canceled) %>% prop.table()
 ```
 
 ```{r,fig.width=10}
-# first 6 rows of dataset
+# First 6 rows of dataset
 head(hotel_demand)
 
-#exploratory graphs
+# Exploratory graphs
 hotel_demand %>% 
   ggplot(aes(x=arrival_date_month))+
   geom_bar()
+
+
+# Plot for cancellations
+hotel_demand %>% 
+  ggplot(aes(x = is_canceled, fill = deposit_type)) +
+  geom_bar(position = "fill") +
+  labs(x = "Is Canceled?", y = "Proportion", fill = "Deposit Type")
 ```
 
