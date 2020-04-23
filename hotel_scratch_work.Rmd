@@ -30,12 +30,6 @@ library(gridExtra)  # For arranging plots
 library(broom)      # For nice model output
 library(janitor)    # For nice names
 
-# Data
-library(ISLR)             # For data
-library(moderndive)       # For data
-library(rattle)           # Weather data
-library(fivethirtyeight)  # Candy data
-
 # Modeling
 library(rsample)          # For splitting data
 library(recipes)          # For keeping track of transformations
@@ -45,6 +39,15 @@ library(glmnet)           # For LASSO
 library(earth)            # For MARS models
 library(rpart)            # For decision trees
 library(randomForest)     # For bagging and random forests
+
+# Color palettes
+library(RColorBrewer)
+
+# Data
+library(ISLR)
+library(moderndive)
+library(rattle)
+library(fivethirtyeight)
 
 theme_set(theme_minimal())
 ```
@@ -93,8 +96,13 @@ hotel_train %>%
   labs(x = "Is Canceled?", y = "Proportion", fill = "Deposit Type")
 
 hotel_train %>% 
-  ggplot(aes(x = as.factor(is_canceled), fill = deposit_type)) +
+  ggplot(aes(x = is_canceled, fill = hotel)) +
   geom_bar(position = "fill") +
-  labs(x = "Is Canceled?", y = "Proportion", fill = "Deposit Type")
+  labs(x = "Is Canceled?", y = "Proportion", fill = "Hotel Type")
+
+hotel_train %>%
+  ggplot(aes(x = is_canceled, y = previous_cancellations)) +
+  geom_boxplot() +
+  labs(x = "Is Canceled?", y = "Precious Cancellations")
 ```
 
