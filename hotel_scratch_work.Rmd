@@ -55,19 +55,25 @@ theme_set(theme_minimal())
 
 ```{r}
 # Reading in the hotel booking demand data
-#setwd("C:/Users/Lori/Desktop/STAT_253")
 hotel_demand <- read.csv("hotel_bookings.csv")
 
 # Change variable classes
-hotel_demand <- hotel_demand %>%
+hotel_demand_factor <- hotel_demand %>%
   mutate(
     is_canceled = as.factor(is_canceled),
-    is_repeated_guest = as.factor(is_repeated_guest),
-  )
+    is_repeated_guest = as.factor(is_repeated_guest)
+    )
+
+hotel_demand_numeric <- hotel_demand %>%
+  select(
+    -hotel, -arrival_date_month, -meal, -country, -market_segment, -distribution_channel, 
+    -reserved_room_type, -reserved_room_type, -assigned_room_type, -deposit_type, -agent, 
+    -company, -customer_type, -reservation_status_date, -reservation_status
+    )
   
 # Divide into training and testing
 set.seed(253)
-hotel_split <- initial_split(hotel_demand, prop = .7, 
+hotel_split <- initial_split(hotel_demand_factor, prop = .7, 
                              strata = is_canceled)
 hotel_train <- training(hotel_split)
 hotel_test <- testing(hotel_split)
@@ -89,7 +95,7 @@ hotel_train %>%
   geom_bar()
 
 
-# Plot for cancellations
+# Plot for cancelations
 hotel_train %>% 
   ggplot(aes(x = is_canceled, fill = deposit_type)) +
   geom_bar(position = "fill") +
@@ -100,23 +106,19 @@ hotel_train %>%
   geom_bar(position = "fill") +
   labs(x = "Is Canceled?", y = "Proportion", fill = "Hotel Type")
 
-hotel_train %>%
-  ggplot(aes(x = is_canceled, y = previous_cancellations)) +
-  geom_boxplot() +
-  labs(x = "Is Canceled?", y = "Precious Cancellations")
+hotel_train %>% 
+  ggplot(aes(x = is_canceled, fill = country)) +
+  geom_bar(position = "fill") +
+  labs(x = "Is Canceled?", y = "Proportion", fill = "Country")
+
 ```
 
 ```{r, fig.width=12}
-# making correlation plot for numeric subset
-hotel_numeric<-hotel_demand %>% 
-  select(-hotel,-arrival_date_month, -meal, -country, -market_segment, -distribution_channel, -reserved_room_type, -reserved_room_type, -assigned_room_type, -deposit_type, -agent, -company, -customer_type, -reservation_status_date, -reservation_status)
-
 H<-cor(hotel_numeric)
 head(round(H,2))
 
 # numeric var. correlation plot
 corrplot(H, method = "color")
-
 ```
 
 
