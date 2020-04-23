@@ -106,3 +106,18 @@ hotel_train %>%
   labs(x = "Is Canceled?", y = "Precious Cancellations")
 ```
 
+```{r, fig.width=12}
+# making correlation plot for numeric subset
+hotel_numeric<-hotel_demand %>% 
+  select(-hotel,-arrival_date_month, -meal, -country, -market_segment, -distribution_channel, -reserved_room_type, -reserved_room_type, -assigned_room_type, -deposit_type, -agent, -company, -customer_type, -reservation_status_date, -reservation_status)
+
+H<-cor(hotel_numeric)
+head(round(H,2))
+
+# numeric var. correlation plot
+corrplot(H, method = "color")
+
+```
+
+
+
