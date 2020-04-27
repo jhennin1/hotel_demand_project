@@ -166,10 +166,55 @@ preds_logistic %>%
            linealpha = .5, pointalpha = .8) +
   geom_abline(slope = 1, intercept = 0, color = "gray") +
   labs(x = "False Positive Fraction", y = "True Positive Fraction")
+```
 
-# LASSO
+```{r}
+# LASSO (all variables)
+set.seed(253)
 
+lambda_grid <- 10^seq(-4, -2, length = 100)
+
+hotel_lasso <- train(
+    is_canceled ~ .,
+    data = hotel_train,
+    method = "glmnet",
+    family = "binomial",
+    trControl = trainControl(method = "cv", number = 5),
+    tuneGrid = data.frame(alpha = 1, 
+                          lambda = lambda_grid),
+    metric = "Accuracy",
+    na.action = na.omit
+)
+
+```
+
+```{r}
 # Classification Tree
+set.seed(253)
 
+hotel_tree <- train(
+  is_canceled ~ .,
+  data = hotel_train,
+  method = "rpart",
+  tuneGrid = data.frame(cp = seq(-.1,0.4,length = 50)),
+  trControl = trainControl(method = "cv", number = 5),
+  metric = "Accuracy",
+  na.action = na.omit
+)
+```
+
+```{r}
 # Random Forest
+set.seed(253)
+hotel_oob <- train(
+  is_canceled ~ .,
+  data = cars_train %>% select(-Model, -`Model Index`), 
+  method = "rf",
+  trControl = trainControl(method = "oob"),
+  tuneGrid = data.frame(mtry = 16),
+  ntree = 500, #number of trees used, default is 500
+  importance = TRUE, #for importance plots later
+  nodesize = 5, #this is the default terminal node size for regression trees. Could set larger for smaller trees.
+  na.action = na.omit
+)
 ```
