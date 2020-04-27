@@ -72,7 +72,13 @@ hotel_category <- hotel_demand %>%
          ) %>% 
   mutate(is_canceled = as.factor(is_canceled)) %>% 
   mutate(is_repeated_guest = as.factor(is_repeated_guest))
-  
+
+hotel_demand <- hotel_demand %>%
+  mutate(
+    is_canceled = as.factor(is_canceled),
+    is_repeated_guest = as.factor(is_repeated_guest)
+  )
+
 # Divide into training and testing
 set.seed(253)
 hotel_split <- initial_split(hotel_demand, prop = .7, 
@@ -117,12 +123,53 @@ hotel_train %>%
 
 ```{r, fig.width=12}
 # Making correlation plot for numeric subset
-H<-cor(hotel_numeric)
+H <- cor(hotel_numeric)
 head(round(H,2))
 
 # Numeric var. correlation plot
 corrplot(H, method = "color")
 ```
 
+```{r}
+# Logistic Regression (all variables)
+set.seed(253)
 
+hotel_logistic <- train(
+    is_canceled ~ .,
+    data = hotel_train,
+    method = "glm",
+    family = "binomial",
+    trControl = trainControl(method = "cv", number = 5),
+    metric = "Accuracy",
+    na.action = na.omit
+)
 
+# Model summary
+summary(hotel_logistic)
+
+# Cross-validated accuracy
+hotel_logistic$results %>%
+  select(Accuracy)
+
+# Confusion matrix
+confusionMatrix(data = predict(hotel_logistic, type = "raw"),
+                reference = hotel_train$is_canceled,
+                positive = "1") 
+
+preds_logistic <- hotel_train %>% 
+  mutate(pred_prob = predict(hotel_logistic$finalModel, 
+                             type = "response"))
+
+preds_logistic %>% 
+  ggplot(aes(d = as.numeric(is_canceled), m = pred_prob)) + 
+  geom_roc(labelround = 2, size = 1,
+           linealpha = .5, pointalpha = .8) +
+  geom_abline(slope = 1, intercept = 0, color = "gray") +
+  labs(x = "False Positive Fraction", y = "True Positive Fraction")
+
+# LASSO
+
+# Classification Tree
+
+# Random Forest
+```
