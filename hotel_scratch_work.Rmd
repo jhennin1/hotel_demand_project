@@ -130,7 +130,9 @@ head(round(H,2))
 corrplot(H, method = "color")
 ```
 
-```{r}
+### MODELING SECTION
+
+```{r, eval=FALSE}
 # Logistic Regression (all variables)
 set.seed(253)
 
@@ -156,6 +158,7 @@ confusionMatrix(data = predict(hotel_logistic, type = "raw"),
                 reference = hotel_train$is_canceled,
                 positive = "1") 
 
+# ROC curve and AUC
 preds_logistic <- hotel_train %>% 
   mutate(pred_prob = predict(hotel_logistic$finalModel, 
                              type = "response"))
@@ -185,6 +188,7 @@ hotel_lasso <- train(
     metric = "Accuracy",
     na.action = na.omit
 )
+
 
 ```
 
@@ -217,4 +221,166 @@ hotel_oob <- train(
   nodesize = 5, #this is the default terminal node size for regression trees. Could set larger for smaller trees.
   na.action = na.omit
 )
+
+preds_logistic %>%
+  roc(is_canceled ~ pred_prob, data=.) %>% 
+  auc()
+
+# VIP Plot
+vip(hotel_logistic, num_features = 31, bar = FALSE)
+```
+
+```{r, eval=FALSE}
+# LASSO
+set.seed(253)
+
+lambda_grid <- 10^seq(-4, -1, length = 100)
+
+hotel_lasso <- train(
+    is_canceled ~ .,
+    data = hotel_train,
+    method = "glmnet",
+    family = "binomial",
+    trControl = trainControl(method = "cv", number = 5),
+    tuneGrid = data.frame(alpha = 1, 
+                          lambda = lambda_grid),
+    metric = "Accuracy",
+    na.action = na.omit
+)
+
+# Plot of lambda vs accuracy
+hotel_lasso$results %>% 
+  ggplot(aes(x = lambda, y = Accuracy)) +
+  geom_line(size = 1.05) +
+  scale_x_log10() +
+  labs(x = "Lambda", y = "Accuracy")
+
+# Best value of lambda
+hotel_lasso$bestTune$lambda
+
+# Accuracy associated with this lambda value
+hotel_lasso$results %>%
+  filter(Accuracy == max(Accuracy)) %>%
+  select(lambda, Accuracy)
+
+# Confusion matrix
+confusionMatrix(data = predict(hotel_lasso, type = "raw"),
+                reference = hotel_train$is_canceled,
+                positive = "1")
+
+# ROC curve and AUC
+preds_lasso <- hotel_train %>% 
+  mutate(pred_prob = predict(hotel_lasso, 
+                             type = "prob")$`1`)
+
+preds_lasso %>% 
+  ggplot(aes(d = as.numeric(is_canceled), m = pred_prob)) + 
+  geom_roc(labelround = 2, size = 1,
+           linealpha = .5, pointalpha = .8) +
+  geom_abline(slope = 1, intercept = 0, color = "gray") +
+  labs(x = "False Positive Fraction", y = "True Positive Fraction")
+
+preds_lasso %>%
+  roc(is_canceled ~ pred_prob, data=.) %>% 
+  auc()
+```
+
+```{r, eval=FALSE}
+# Classification Tree
+set.seed(253)
+
+hotel_tree <- train(
+  is_canceled ~ .,
+  data = hotel_train,
+  method = "rpart",
+  tuneGrid = data.frame(cp = 10^seq(-4, -2 , length = 50)),
+  trControl = trainControl(method = "cv", number = 5),
+  metric = "Accuracy",
+  na.action = na.omit
+)
+
+# Plot of cp vs accuracy
+hotel_tree$results %>%
+  ggplot(aes(x = cp, y = Accuracy)) +
+  geom_line(size = 1.05) +
+  labs(x = "cp", y = "Accuracy")
+
+# Best cp value
+hotel_tree$bestTune$cp
+
+# Accuracy associated with this cp value
+hotel_tree$results %>%
+  filter(Accuracy == max(Accuracy)) %>%
+  select(cp, Accuracy)
+
+# Confusion matrix
+confusionMatrix(data = predict(hotel_tree, type = "raw"),
+                reference = hotel_train$is_canceled,
+                positive = "1")
+
+# ROC curve and AUC
+preds_tree <- hotel_train %>% 
+  mutate(pred_prob = predict(hotel_tree, 
+                             type = "prob")$`1`)
+
+preds_tree %>% 
+  ggplot(aes(d = as.numeric(is_canceled), m = pred_prob)) + 
+  geom_roc(labelround = 2, size = 1,
+           linealpha = .5, pointalpha = .8) +
+  geom_abline(slope = 1, intercept = 0, color = "gray") +
+  labs(x = "False Positive Fraction", y = "True Positive Fraction")
+
+preds_tree %>%
+  roc(is_canceled ~ pred_prob, data=.) %>% 
+  auc()
+```
+
+```{r, eval=FALSE}
+# Random Forest
+set.seed(253)
+
+hotel_randf_oob <- train(
+  is_canceled ~ .,
+  data = hotel_train, 
+  method = "rf",
+  trControl = trainControl(method = "oob"),
+  tuneGrid = data.frame(mtry = c(2,4,6,8,10,12)),
+  ntree = 100,
+  importance = TRUE,
+  nodesize = 5,
+  na.action = na.omit
+)
+
+# Plot of number of trees vs OOB error
+plot(hotel_randf_oob$finalModel, main = "OOB Error by Number of Trees (Where Error = 1 - Accuracy)")
+
+# Accuracy associated with the best model
+hotel_randf_oob$results %>%
+  filter(Accuracy == max(Accuracy)) %>%
+  select(Accuracy)
+
+# Confusion matrix
+confusionMatrix(data = predict(hotel_randf_oob, type = "raw"),
+                reference = hotel_train$is_canceled,
+                positive = "1")
+
+# ROC Curve and AUC
+preds_randf <- hotel_train %>% 
+  mutate(pred_prob = predict(hotel_randf_oob, 
+                             type = "prob")$`1`)
+
+preds_randf %>% 
+  ggplot(aes(d = as.numeric(is_canceled), m = pred_prob)) + 
+  geom_roc(labelround = 2, size = 1,
+           linealpha = .5, pointalpha = .8) +
+  geom_abline(slope = 1, intercept = 0, color = "gray") +
+  labs(x = "False Positive Fraction", y = "True Positive Fraction")
+
+preds_randf %>%
+  roc(is_canceled ~ pred_prob, data=.) %>% 
+  auc()
+
+# VIP Plot
+vip(hotel_randf_oob$finalModel, num_features = 31, bar = FALSE)
+
 ```
