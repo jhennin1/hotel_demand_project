@@ -76,12 +76,21 @@ hotel_category <- hotel_demand %>%
 hotel_demand <- hotel_demand %>%
   mutate(
     is_canceled = as.factor(is_canceled),
-    is_repeated_guest = as.factor(is_repeated_guest)
-  )
+    is_repeated_guest = as.factor(is_repeated_guest),
+    assigned_correct_room = ifelse(as.character(assigned_room_type) == as.character(reserved_room_type), 1, 0)
+  ) %>%
+  select(
+    -arrival_date_year, -arrival_date_month, -arrival_date_day_of_month, -stays_in_week_nights,
+    -previous_bookings_not_canceled, -market_segment, -agent, -company, -country, -meal,
+    -assigned_room_type, -reserved_room_type, -customer_type, -days_in_waiting_list, -deposit_type,
+    -booking_changes, -reservation_status_date, -reservation_status, -customer_type,
+    -required_car_parking_spaces, -babies, -children
+  ) %>%
+  filter(distribution_channel != "Undefined")
 
 # Divide into training and testing
 set.seed(253)
-hotel_split <- initial_split(hotel_demand, prop = .7, 
+hotel_split <- initial_split(hotel_demand, prop = 0.5, 
                              strata = is_canceled)
 hotel_train <- training(hotel_split)
 hotel_test <- testing(hotel_split)
@@ -96,11 +105,6 @@ table(hotel_test$is_canceled) %>% prop.table()
 ```{r,fig.width=10}
 # First 6 rows of dataset
 head(hotel_train)
-
-# Exploratory graphs
-hotel_train %>% 
-  ggplot(aes(x=arrival_date_month))+
-  geom_bar()
 
 
 # Plot for cancelations
@@ -118,6 +122,11 @@ hotel_train %>%
   ggplot(aes(x = is_canceled, fill = country)) +
   geom_bar(position = "fill") +
   labs(x = "Is Canceled?", y = "Proportion", fill = "Country")
+
+hotel_train %>% 
+  ggplot(aes(x = is_canceled, fill = reserved_room_type)) +
+  geom_bar(position = "fill") +
+  labs(x = "Is Canceled?", y = "Proportion")
 ```
 
 
@@ -132,7 +141,7 @@ corrplot(H, method = "color")
 
 ### MODELING SECTION
 
-```{r, eval=FALSE}
+```{r}
 # Logistic Regression (all variables)
 set.seed(253)
 
@@ -144,7 +153,7 @@ hotel_logistic <- train(
     trControl = trainControl(method = "cv", number = 5),
     metric = "Accuracy",
     na.action = na.omit
-)
+) # take out variable with few observations of one level
 
 # Model summary
 summary(hotel_logistic)
@@ -169,10 +178,14 @@ preds_logistic %>%
            linealpha = .5, pointalpha = .8) +
   geom_abline(slope = 1, intercept = 0, color = "gray") +
   labs(x = "False Positive Fraction", y = "True Positive Fraction")
+
+preds_logistic %>%
+  roc(is_canceled ~ pred_prob, data=.) %>% 
+  auc()
 ```
 
 
-```{r, eval=FALSE}
+```{r}
 # LASSO
 set.seed(253)
 
@@ -228,7 +241,7 @@ preds_lasso %>%
 ```
 
 
-```{r, eval=FALSE}
+```{r}
 # Classification Tree
 set.seed(253)
 
@@ -278,7 +291,7 @@ preds_tree %>%
   auc()
 ```
 
-```{r, eval=FALSE}
+```{r}
 # Random Forest
 set.seed(253)
 
