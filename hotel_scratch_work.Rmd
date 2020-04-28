@@ -180,7 +180,7 @@ preds_logistic %>%
   labs(x = "False Positive Fraction", y = "True Positive Fraction")
 
 preds_logistic %>%
-  roc(is_canceled ~ pred_prob, data=.) %>% 
+  roc(is_canceled ~ pred_prob, data = .) %>% 
   auc()
 ```
 
@@ -236,7 +236,7 @@ preds_lasso %>%
   labs(x = "False Positive Fraction", y = "True Positive Fraction")
 
 preds_lasso %>%
-  roc(is_canceled ~ pred_prob, data=.) %>% 
+  roc(is_canceled ~ pred_prob, data = .) %>% 
   auc()
 ```
 
@@ -287,7 +287,7 @@ preds_tree %>%
   labs(x = "False Positive Fraction", y = "True Positive Fraction")
 
 preds_tree %>%
-  roc(is_canceled ~ pred_prob, data=.) %>% 
+  roc(is_canceled ~ pred_prob, data = .) %>% 
   auc()
 ```
 
@@ -333,11 +333,10 @@ preds_randf %>%
   labs(x = "False Positive Fraction", y = "True Positive Fraction")
 
 preds_randf %>%
-  roc(is_canceled ~ pred_prob, data=.) %>% 
+  roc(is_canceled ~ pred_prob, data = .) %>% 
   auc()
 
 # VIP Plot
 vip(hotel_randf_oob$finalModel, num_features = 31, bar = FALSE)
-
 ```
 
