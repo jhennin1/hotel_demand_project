@@ -77,16 +77,15 @@ hotel_demand <- hotel_demand %>%
   mutate(
     is_canceled = as.factor(is_canceled),
     is_repeated_guest = as.factor(is_repeated_guest),
-    assigned_correct_room = ifelse(as.character(assigned_room_type) == as.character(reserved_room_type), 1, 0)
+    assigned_correct_room = ifelse(as.character(assigned_room_type) == as.character(reserved_room_type), 1, 0),
+    has_previous_cancellations = ifelse(previous_cancellations > 0, 1, 0)
   ) %>%
   select(
     -arrival_date_year, -arrival_date_month, -arrival_date_day_of_month, -stays_in_week_nights,
-    -previous_bookings_not_canceled, -market_segment, -agent, -company, -country, -meal,
-    -assigned_room_type, -reserved_room_type, -customer_type, -days_in_waiting_list, -deposit_type,
-    -booking_changes, -reservation_status_date, -reservation_status, -customer_type,
-    -required_car_parking_spaces, -babies, -children
-  ) %>%
-  filter(distribution_channel != "Undefined")
+    -previous_bookings_not_canceled, -market_segment, -agent, -company, -reservation_status_date,
+    -country, -assigned_room_type, -reserved_room_type, -previous_cancellations, -required_car_parking_spaces,
+     -deposit_type, -reservation_status, -distribution_channel, -children
+  )
 
 # Divide into training and testing
 set.seed(253)
@@ -106,27 +105,11 @@ table(hotel_test$is_canceled) %>% prop.table()
 # First 6 rows of dataset
 head(hotel_train)
 
-
-# Plot for cancelations
-hotel_train %>% 
-  ggplot(aes(x = as.factor(is_canceled), fill = deposit_type)) +
-  geom_bar(position = "fill") +
-  labs(x = "Is Canceled?", y = "Proportion", fill = "Deposit Type")
-
+# Exploratory plots for cancelations
 hotel_train %>% 
   ggplot(aes(x = as.factor(is_canceled), fill = hotel)) +
   geom_bar(position = "fill") +
   labs(x = "Is Canceled?", y = "Proportion", fill = "Hotel Type")
-
-hotel_train %>% 
-  ggplot(aes(x = is_canceled, fill = country)) +
-  geom_bar(position = "fill") +
-  labs(x = "Is Canceled?", y = "Proportion", fill = "Country")
-
-hotel_train %>% 
-  ggplot(aes(x = is_canceled, fill = reserved_room_type)) +
-  geom_bar(position = "fill") +
-  labs(x = "Is Canceled?", y = "Proportion")
 ```
 
 
@@ -153,7 +136,7 @@ hotel_logistic <- train(
     trControl = trainControl(method = "cv", number = 5),
     metric = "Accuracy",
     na.action = na.omit
-) # take out variable with few observations of one level
+)
 
 # Model summary
 summary(hotel_logistic)
@@ -339,4 +322,3 @@ preds_randf %>%
 # VIP Plot
 vip(hotel_randf_oob$finalModel, num_features = 31, bar = FALSE)
 ```
-
