@@ -77,7 +77,8 @@ hotel_demand <- hotel_demand %>%
   mutate(
     is_canceled = as.factor(is_canceled),
     is_repeated_guest = as.factor(is_repeated_guest),
-    assigned_correct_room = ifelse(as.character(assigned_room_type) == as.character(reserved_room_type), 1, 0),
+    assigned_correct_room = as.factor(ifelse(as.character(assigned_room_type) == as.character(reserved_room_type), 
+                                             1, 0)),
     has_previous_cancellations = ifelse(previous_cancellations > 0, 1, 0)
   ) %>%
   select(
@@ -90,12 +91,22 @@ hotel_demand <- hotel_demand %>%
 names(hotel_demand)[names(hotel_demand) == "country"] <- "region"
 
 attach(hotel_demand)
-hotel_demand$region[region %in% c("ABW","AIA","ARG","BHS","BOL","BRA","BRB","CHL","COL","CRI","CUB","CYM","DMA","DOM","ECU","GLP","GTM","GUY","HND","JAM","KNA","LCA","MEX","NIC","PAN","PER","PRI","PRY","SLV","SUR","URY","USA","VEN","VGB")]<-"Americas"
-hotel_demand$region[region %in% c("ALB","AND","AUT","BEL","BGR","BIH","CHE","CYP","CZE","DEU","DNK","ESP","EST","FIN","FRA","FRO","GBR","GEO","GGY","GIB","GRC","HRV","HUN","IMN","IRL","ISL","ISR","ITA","JER","LIE","LTU","LUX","LVA","MCO","MKD","MLT","MNE","NLD","NOR","POL","PRT","ROU","SMR","SRB","SVK","SVN","SWE","TUR","UKR")]<-"Europe"
-hotel_demand$region[region %in% c("ASM","ATF","AUS","BGD","CHN","CN","FJI","HKG","IDN","IND","IRN","JPN","KHM","KIR","KOR","LAO","LKA","MAC","MDV","MMR","MYS","NAM","NCL","NPL","NZL","PAK","PHL","PLW","PYF","SGP","THA","TMP","TWN","UMI","VNM")]<-"Asia & Pacific"
-hotel_demand$region[region %in% c("AGO","BDI","BEN","BFA","BWA","CAF","CIV","CMR","CPV","ETH","GAB","GHA","GNB","KEN","KWT","MDG","MLI","MOZ","MUS","MWI","MYT","NGA","RWA","SEN","SLE","STP","SYC","TGO","TZA","UGA","ZAF","ZMB","ZWE")]<-"Africa"
-hotel_demand$region[region %in% c("ARE","BHR","COM","DJI","DZA","EGY","IRQ","JOR","LBN","LBY","MAR","MRT","OMN","QAT","SAU","SDN","SYR","TUN")]<-"Arab States"
-hotel_demand$region[region %in% c("ARM","ATA","AZE","BLR","KAZ","NULL","RUS","TJK","UZB")]<-"CIS"
+hotel_demand$region[region %in% c("ABW","AIA","ARG","BHS","BOL","BRA","BRB","CHL","COL","CRI","CUB","CYM",
+                                "DMA","DOM","ECU","GLP","GTM","GUY","HND","JAM","KNA","LCA","MEX","NIC","PAN",
+                                "PER","PRI","PRY","SLV","SUR","URY","USA","VEN","VGB")] <- "Americas"
+hotel_demand$region[region %in% c("ALB","AND","AUT","BEL","BGR","BIH","CHE","CYP","CZE","DEU","DNK","ESP",
+                                "EST","FIN","FRA","FRO","GBR","GEO","GGY","GIB","GRC","HRV","HUN","IMN","IRL",
+                                "ISL","ISR","ITA","JER","LIE","LTU","LUX","LVA","MCO","MKD","MLT","MNE","NLD",
+                                "NOR","POL","PRT","ROU","SMR","SRB","SVK","SVN","SWE","TUR","UKR","JEY")] <- "Europe"
+hotel_demand$region[region %in% c("ASM","ATF","AUS","BGD","CHN","CN","FJI","HKG","IDN","IND","IRN","JPN",
+                                "KHM","KIR","KOR","LAO","LKA","MAC","MDV","MMR","MYS","NAM","NCL","NPL","NZL",
+                                "PAK","PHL","PLW","PYF","SGP","THA","TMP","TWN","UMI","VNM")] <- "Asia & Pacific"
+hotel_demand$region[region %in% c("AGO","BDI","BEN","BFA","BWA","CAF","CIV","CMR","CPV","ETH","GAB","GHA","GNB",
+                                "KEN","KWT","MDG","MLI","MOZ","MUS","MWI","MYT","NGA","RWA","SEN","SLE","STP",
+                                "SYC","TGO","TZA","UGA","ZAF","ZMB","ZWE")] <- "Africa"
+hotel_demand$region[region %in% c("ARE","BHR","COM","DJI","DZA","EGY","IRQ","JOR","LBN","LBY","MAR","MRT",
+                                  "OMN","QAT","SAU","SDN","SYR","TUN")] <- "Arab States"
+hotel_demand$region[region %in% c("ARM","ATA","AZE","BLR","KAZ","NULL","RUS","TJK","UZB")] <- "CIS"
 
 # Divide into training and testing
 set.seed(253)
@@ -116,11 +127,51 @@ table(hotel_test$is_canceled) %>% prop.table()
 # First 6 rows of dataset
 head(hotel_train)
 
-# Exploratory plots for cancelations
+
+# Exploratory plots for our response variable
+
 hotel_train %>% 
-  ggplot(aes(x = as.factor(is_canceled), fill = hotel)) +
+  ggplot(aes(x = is_canceled, fill = region)) +
   geom_bar(position = "fill") +
-  labs(x = "Is Canceled?", y = "Proportion", fill = "Hotel Type")
+  labs(x = "Is Canceled", y = "Proportion")
+
+# Numeric
+hotel_train %>%
+  ggplot(aes(x = is_canceled, y = lead_time, color = is_canceled)) +
+  geom_boxplot(show.legend = FALSE) +
+  labs(x = "Is Canceled", y = "Lead Time")
+
+hotel_train %>%
+  ggplot(aes(x = is_canceled, y = factor(total_of_special_requests), color = is_canceled)) +
+  geom_count(show.legend = FALSE) +
+  labs(x = "Is Canceled", y = "Total Number of Special Requests")
+
+hotel_train %>%
+  filter(adr < 5400) %>%
+  ggplot(aes(x = is_canceled, y = adr, color = is_canceled)) +
+  geom_boxplot(show.legend = FALSE) +
+  labs(x = "Is Canceled", y = "Average Daily Rate")
+
+hotel_train %>%
+  ggplot(aes(x = is_canceled, y = booking_changes, color = is_canceled)) +
+  geom_count(show.legend = FALSE) +
+  labs(x = "Is Canceled", y = "Number of Booking Changes")
+
+hotel_train %>%
+  ggplot(aes(x = arrival_date_week_number, fill = is_canceled)) +
+  geom_histogram(bins = 52) +
+  labs(x = "Arrival Date Week Number", y = "Count", fill = "Is Canceled")
+
+# Categorical
+hotel_train %>% 
+  ggplot(aes(x = as.factor(is_canceled), fill = factor(assigned_correct_room))) +
+  geom_bar(position = "fill") +
+  labs(x = "Is Canceled", y = "Proportion", fill = "Assigned Correct Room")
+
+hotel_train %>% 
+  ggplot(aes(x = as.factor(is_canceled), fill = factor(has_previous_cancellations))) +
+  geom_bar(position = "fill") +
+  labs(x = "Is Canceled", y = "Proportion", fill = "Has Previous Cancellations")
 ```
 
 
@@ -134,6 +185,50 @@ corrplot(H, method = "color")
 ```
 
 ### MODELING SECTION
+
+```{r}
+# Logistic Regression (top 7 variables)
+set.seed(253)
+
+hotel_logistic_best <- train(
+    is_canceled ~ lead_time + total_of_special_requests + adr + assigned_correct_room + booking_changes + 
+      arrival_date_week_number + has_previous_cancellations,
+    data = hotel_train,
+    method = "glm",
+    family = "binomial",
+    trControl = trainControl(method = "cv", number = 5),
+    metric = "Accuracy",
+    na.action = na.omit
+)
+
+# Model summary
+summary(hotel_logistic_best)
+
+# Cross-validated accuracy
+hotel_logistic_best$results %>%
+  select(Accuracy)
+
+# Confusion matrix
+confusionMatrix(data = predict(hotel_logistic_best, type = "raw"),
+                reference = hotel_train$is_canceled,
+                positive = "1") 
+
+# ROC curve and AUC
+preds_logistic_best <- hotel_train %>% 
+  mutate(pred_prob = predict(hotel_logistic_best$finalModel, 
+                             type = "response"))
+
+preds_logistic_best %>% 
+  ggplot(aes(d = as.numeric(is_canceled) - 1, m = pred_prob)) + 
+  geom_roc(labelround = 2, size = 1,
+           linealpha = .5, pointalpha = .8) +
+  geom_abline(slope = 1, intercept = 0, color = "gray") +
+  labs(x = "False Positive Fraction", y = "True Positive Fraction")
+
+preds_logistic_best %>%
+  roc(is_canceled ~ pred_prob, data = .) %>% 
+  auc()
+```
 
 ```{r}
 # Logistic Regression (all variables)
@@ -167,7 +262,7 @@ preds_logistic <- hotel_train %>%
                              type = "response"))
 
 preds_logistic %>% 
-  ggplot(aes(d = as.numeric(is_canceled), m = pred_prob)) + 
+  ggplot(aes(d = as.numeric(is_canceled) - 1, m = pred_prob)) + 
   geom_roc(labelround = 2, size = 1,
            linealpha = .5, pointalpha = .8) +
   geom_abline(slope = 1, intercept = 0, color = "gray") +
@@ -223,7 +318,7 @@ preds_lasso <- hotel_train %>%
                              type = "prob")$`1`)
 
 preds_lasso %>% 
-  ggplot(aes(d = as.numeric(is_canceled), m = pred_prob)) + 
+  ggplot(aes(d = as.numeric(is_canceled) - 1, m = pred_prob)) + 
   geom_roc(labelround = 2, size = 1,
            linealpha = .5, pointalpha = .8) +
   geom_abline(slope = 1, intercept = 0, color = "gray") +
@@ -274,7 +369,7 @@ preds_tree <- hotel_train %>%
                              type = "prob")$`1`)
 
 preds_tree %>% 
-  ggplot(aes(d = as.numeric(is_canceled), m = pred_prob)) + 
+  ggplot(aes(d = as.numeric(is_canceled) - 1, m = pred_prob)) + 
   geom_roc(labelround = 2, size = 1,
            linealpha = .5, pointalpha = .8) +
   geom_abline(slope = 1, intercept = 0, color = "gray") +
@@ -294,8 +389,8 @@ hotel_randf_oob <- train(
   data = hotel_train, 
   method = "rf",
   trControl = trainControl(method = "oob"),
-  tuneGrid = data.frame(mtry = c(2,4,6,8,10,12)),
-  ntree = 100,
+  tuneGrid = data.frame(mtry = c(4,6,8)),
+  ntree = 75,
   importance = TRUE,
   nodesize = 5,
   na.action = na.omit
@@ -320,7 +415,7 @@ preds_randf <- hotel_train %>%
                              type = "prob")$`1`)
 
 preds_randf %>% 
-  ggplot(aes(d = as.numeric(is_canceled), m = pred_prob)) + 
+  ggplot(aes(d = as.numeric(is_canceled) - 1, m = pred_prob)) + 
   geom_roc(labelround = 2, size = 1,
            linealpha = .5, pointalpha = .8) +
   geom_abline(slope = 1, intercept = 0, color = "gray") +
@@ -332,4 +427,98 @@ preds_randf %>%
 
 # VIP Plot
 vip(hotel_randf_oob$finalModel, num_features = 31, bar = FALSE)
+
+# Partial Depencence Plots (interpet effect of actual variables given average levels)
+```
+
+### TEST DATASET METRICS
+
+```{r}
+# Logistic Regression (top 7 variables)
+set.seed(253)
+
+# Confusion matrix
+confusionMatrix(data = predict(hotel_logistic_best, newdata = hotel_test, type = "raw"),
+                reference = hotel_test$is_canceled,
+                positive = "1")
+
+# AUC
+preds_logistic_best_test <- hotel_test %>% 
+  mutate(pred_prob = predict(hotel_logistic_best, type = "prob")$`1`)
+
+preds_logistic_best_test %>%
+  roc(is_canceled ~ pred_prob, data = .) %>% 
+  auc()
+```
+
+```{r}
+# Logistic Regression (all variables)
+set.seed(253)
+
+# Confusion matrix
+confusionMatrix(data = predict(hotel_logistic, newdata = hotel_test, type = "raw"),
+                reference = hotel_test$is_canceled,
+                positive = "1")
+
+# AUC
+preds_logistic_test <- hotel_test %>% 
+  mutate(pred_prob = predict(hotel_logistic, type = "prob")$`1`)
+
+preds_logistic_test %>%
+  roc(is_canceled ~ pred_prob, data = .) %>% 
+  auc()
+```
+
+```{r}
+# LASSO
+set.seed(253)
+
+# Confusion matrix
+confusionMatrix(data = predict(hotel_lasso, newdata = hotel_test, type = "raw"),
+                reference = hotel_test$is_canceled,
+                positive = "1")
+
+# AUC
+preds_lasso_test <- hotel_test %>% 
+  mutate(pred_prob = predict(hotel_lasso, type = "prob")$`1`)
+
+preds_lasso_test %>%
+  roc(is_canceled ~ pred_prob, data = .) %>% 
+  auc()
+```
+
+```{r}
+# Classification Tree
+set.seed(253)
+
+# Confusion matrix
+confusionMatrix(data = predict(hotel_tree, newdata = hotel_test, type = "raw"),
+                reference = hotel_test$is_canceled,
+                positive = "1")
+
+# AUC
+preds_tree_test <- hotel_test %>% 
+  mutate(pred_prob = predict(hotel_tree, type = "prob")$`1`)
+
+preds_tree_test %>%
+  roc(is_canceled ~ pred_prob, data = .) %>% 
+  auc()
+```
+
+```{r}
+# Random Forest
+set.seed(253)
+
+# Confusion matrix
+confusionMatrix(data = predict(hotel_randf_oob, newdata = hotel_test, type = "raw"),
+                reference = hotel_test$is_canceled,
+                positive = "1")
+
+# AUC
+preds_randf_test <- hotel_test %>% 
+  mutate(pred_prob = predict(hotel_randf_oob, type = "prob")$`1`)
+
+preds_randf_test %>%
+  roc(is_canceled ~ pred_prob, data = .) %>% 
+  auc()
 ```
