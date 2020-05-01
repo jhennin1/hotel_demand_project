@@ -1,6 +1,6 @@
 ---
-title: "scratch_work"
-author: "Jackson Henningfield"
+title: "Final Project Work"
+author: "Jackson Henningfield and Jack Freier"
 date: "4/22/2020"
 output: html_document
 ---
@@ -522,3 +522,14 @@ preds_randf_test %>%
   roc(is_canceled ~ pred_prob, data = .) %>% 
   auc()
 ```
+
+### Final Results
+
+
+| Model             | Training Acc.| CV Acc.    |   AUC  | Test Acc.| Test ACU|
+|-------------------|--------------|------------|--------|----------|---------|
+|hotel_logistic     | 0.7785       |  0.7779    | 0.8191 |  0.7779  | 0.7325  |
+|hotel_lasso        | 0.7785       |  0.7781    | 0.8190 |  0.7778  | 0.7325  |
+|hotel_tree         | 0.8343       |  0.8114    | 0.8796 |  0.8128  | 0.7681  |
+|hotel_randf_oob    | 0.8358       |  0.8357    | 0.8984 |  0.8375  | 0.7859  |
+|hotel_logistic_best| 0.7355       | 	0.7353    | 0.7931 |  0.7363  | 0.7159  |
