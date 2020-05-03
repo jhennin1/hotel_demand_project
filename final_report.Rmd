@@ -2,8 +2,11 @@
 title: "Final Report"
 author: "Jack Freier and Jackson Henningfield"
 date: "5/3/2020"
+<<<<<<< HEAD
 output: html_document
----
+output: bookdown::html_document2
+abstract: "This report takes an in-depth look at the many factors that influence hotel booking cancellations. Using a data set that contains a series of potential explanatory variables, we build and train four models that predict the probability of a guest cancelling their hotel reservation. We then evaluate these models individually and present our findings, justifying our selection of the best model with several performance metrics as well as providing a detailed interpretation of the results."
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -126,6 +129,7 @@ table(hotel_test$is_canceled) %>% prop.table()
 
 ### Exploratory Work 
 
+
 ```{r}
 hotel_train %>% 
   ggplot(aes(x = is_canceled, fill = region)) +
@@ -159,11 +163,32 @@ hotel_train %>%
   geom_histogram(bins = 52) +
   labs(x = "Arrival Date Week Number", y = "Count", fill = "Is Canceled")
 
+```
+
+In order to get a broad sense of how each variable influences our response, we first created explanatory plots for hotel cancellations. These plots were split into two categories, one comprising numeric predictors and one categorical predictors. Each visualization gives insight into how that variable proportionally influences cancellations.
+
+```{r, fig.width=12, fig.height=9, fig.cap="Example exploratory plots for four variables of interest (two numeric, two categorical). (Upper left) The median lead time for cancelled bookings is substantially higher than non-cancelled bookings. (Upper right) There are proportionally more cancellations from week 14 to week 44. (Lower left) There are proportionally more cancellations for bookings where the guest was assigned the correct room. (Lower right) There are proportionally more cancellations for guests who have previously cancelled a hotel booking."}
+
+# Numeric
+explanatory_1 <- hotel_train %>%
+  ggplot(aes(x = is_canceled, y = lead_time)) +
+  geom_boxplot() +
+  labs(x = "Is Canceled", y = "Lead Time")
+
+explanatory_2 <- hotel_train %>%
+  ggplot(aes(x = arrival_date_week_number, fill = is_canceled, color = is_canceled)) +
+  geom_density(alpha = 0.6) +
+  labs(x = "Arrival Date Week Number", y = "Density", fill = "Is Canceled") +
+  guides(color = FALSE) +
+  scale_x_continuous(breaks = seq(0, 52, 4), limits = c(0, 53))
+
+
 # Categorical
-hotel_train %>% 
+explanatory_3 <- hotel_train %>% 
   ggplot(aes(x = as.factor(is_canceled), fill = factor(assigned_correct_room))) +
   geom_bar(position = "fill") +
   labs(x = "Is Canceled", y = "Proportion", fill = "Assigned Correct Room")
+
 
 hotel_train %>% 
   ggplot(aes(x = as.factor(is_canceled), fill = factor(has_previous_cancellations))) +
@@ -173,9 +198,24 @@ hotel_train %>%
 
 
 ```{r}
+explanatory_4 <- hotel_train %>% 
+  ggplot(aes(x = as.factor(is_canceled), fill = factor(has_previous_cancellations))) +
+  geom_bar(position = "fill") +
+  labs(x = "Is Canceled", y = "Proportion", fill = "Has Previous Cancellations")
+
+grid.arrange(explanatory_1, explanatory_2, explanatory_3, explanatory_4, ncol=2)
+```
+
+As a way of narrowing our search process, we also contructed a correlation plot for the numeric predictors. This figure is intended to provide a sense of how highly correlated each variable is with one another, helping us to reduce the pool of potential predictors while safeguarding against multicolinearity. After identifying pairs of variables that were highly correlated, we opted to remove one of the two from the dataset. The particular variables that were removed were ...
+
+```{r, include=FALSE}
 # Making correlation plot for numeric subset
 H <- cor(hotel_numeric)
 head(round(H,2))
+```
+
+
+```{r, fig.width=12, fig.cap="Plot detailing the correlation between individual numeric variables included in the data set. The opacity of the square signifies the magnitude, with blue representing positive correlation and red representing negative correlation."}
 
 # Numeric var. correlation plot
 corrplot(H, method = "color")
@@ -183,6 +223,10 @@ corrplot(H, method = "color")
 
 
 ### Modeling Process
+
+We wanted to create the "best" possible model that would be fit for predicting whether or not a particular reservation would be canceled or not. When we say "best" possible model, we want to have a model that has the highest testing accuracy since the we can measure a model's predictive power based on its performance on the testing data set.
+
+In our study, we created five models with is_canceled as our response variable. These five models (logistic, LASSO, Classifcation Tree, and Random Forest, and a logistic model with seven variables) and their outputs can be seen below. We trained each model on the training set and calculated the training and cv accuracies as well as the areas under each ROC curve. 
 
 ```{r, echo=FALSE}
 # Logistic Regression (top 7 variables)
@@ -435,6 +479,7 @@ partial(hotel_randf_oob, pred.var = "lead_time",
 ```
 
 
+
 ### Results and Next Steps
 
 
@@ -445,4 +490,5 @@ partial(hotel_randf_oob, pred.var = "lead_time",
 |hotel_tree         | 0.8343       |  0.8114    | 0.8796 |  0.8128  | 0.7681  |
 |hotel_randf_oob    | 0.8358       |  0.8357    | 0.8984 |  0.8375  | 0.7859  |
 |hotel_logistic_best| 0.7355       | 	0.7353    | 0.7931 |  0.7363  | 0.7159  |
+
 
