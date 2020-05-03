@@ -1,0 +1,135 @@
+---
+title: "Final Report"
+author: "Jack Freier and Jackson Henningfield"
+date: "5/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+# Plotting and exploring
+library(tidyverse)  # For plotting and summarizing
+library(GGally)     # For nice scatterplot matrix 
+library(ggridges)   # For joy/ridge plots
+library(corrplot)   # For basic correlation matrix plot
+library(naniar)     # For exploring missing values
+library(pdp)        # For partial dependence plots, MARS models
+library(rpart.plot) # For plotting decision trees
+library(vip)        # For importance plots
+library(pROC)       # For ROC curves
+library(plotROC)    # For plotting ROC curves
+
+# Making things look nice
+library(lubridate)  # For nice dates
+library(knitr)      # For nice tables
+library(scales)     # For nice labels on graphs
+library(gridExtra)  # For arranging plots
+library(broom)      # For nice model output
+library(janitor)    # For nice names
+
+# Modeling
+library(rsample)          # For splitting data
+library(recipes)          # For keeping track of transformations
+library(caret)            # For modeling
+library(leaps)            # For variable selection
+library(glmnet)           # For LASSO
+library(earth)            # For MARS models
+library(rpart)            # For decision trees
+library(randomForest)     # For bagging and random forests
+
+# Color palettes
+library(RColorBrewer)
+
+# Data
+library(ISLR)
+library(moderndive)
+library(rattle)
+library(fivethirtyeight)
+
+theme_set(theme_minimal())
+```
+
+### Introduction
+
+```{r}
+# Reading in the hotel booking demand data
+hotel_demand <- read.csv("hotel_bookings.csv",stringsAsFactors = FALSE)
+
+# Change variable classes
+hotel_numeric <- hotel_demand %>%
+    select(-hotel,-arrival_date_month, -meal, -country, -market_segment, -distribution_channel, 
+           -reserved_room_type, -reserved_room_type, -assigned_room_type, -deposit_type, -agent, 
+           -company, -customer_type, -reservation_status_date, -reservation_status
+           )
+
+hotel_category <- hotel_demand %>% 
+  select(-lead_time, -arrival_date_year, -arrival_date_week_number, -arrival_date_day_of_month, 
+         -stays_in_weekend_nights, -stays_in_week_nights, -adults, -children, -babies, 
+         -previous_bookings_not_canceled, -booking_changes, -days_in_waiting_list, -adr, 
+         -required_car_parking_spaces, -total_of_special_requests
+         ) %>% 
+  mutate(is_canceled = as.factor(is_canceled)) %>% 
+  mutate(is_repeated_guest = as.factor(is_repeated_guest))
+
+hotel_demand <- hotel_demand %>%
+  mutate(
+    is_canceled = as.factor(is_canceled),
+    is_repeated_guest = as.factor(is_repeated_guest),
+    assigned_correct_room = as.factor(ifelse(as.character(assigned_room_type) == as.character(reserved_room_type), 
+                                             1, 0)),
+    has_previous_cancellations = ifelse(previous_cancellations > 0, 1, 0)
+  ) %>%
+  select(
+    -arrival_date_year, -arrival_date_month, -arrival_date_day_of_month, -stays_in_week_nights,
+    -previous_bookings_not_canceled, -market_segment, -agent, -company, -reservation_status_date, -assigned_room_type, -reserved_room_type, -previous_cancellations, -required_car_parking_spaces,
+     -deposit_type, -reservation_status, -distribution_channel, -children
+  )
+
+# Putting all countries into regions based on ITU Region classification
+names(hotel_demand)[names(hotel_demand) == "country"] <- "region"
+
+attach(hotel_demand)
+hotel_demand$region[region %in% c("ABW","AIA","ARG","BHS","BOL","BRA","BRB","CHL","COL","CRI","CUB","CYM",
+                                "DMA","DOM","ECU","GLP","GTM","GUY","HND","JAM","KNA","LCA","MEX","NIC","PAN",
+                                "PER","PRI","PRY","SLV","SUR","URY","USA","VEN","VGB")] <- "Americas"
+hotel_demand$region[region %in% c("ALB","AND","AUT","BEL","BGR","BIH","CHE","CYP","CZE","DEU","DNK","ESP",
+                                "EST","FIN","FRA","FRO","GBR","GEO","GGY","GIB","GRC","HRV","HUN","IMN","IRL",
+                                "ISL","ISR","ITA","JER","LIE","LTU","LUX","LVA","MCO","MKD","MLT","MNE","NLD",
+                                "NOR","POL","PRT","ROU","SMR","SRB","SVK","SVN","SWE","TUR","UKR","JEY")] <- "Europe"
+hotel_demand$region[region %in% c("ASM","ATF","AUS","BGD","CHN","CN","FJI","HKG","IDN","IND","IRN","JPN",
+                                "KHM","KIR","KOR","LAO","LKA","MAC","MDV","MMR","MYS","NAM","NCL","NPL","NZL",
+                                "PAK","PHL","PLW","PYF","SGP","THA","TMP","TWN","UMI","VNM")] <- "Asia & Pacific"
+hotel_demand$region[region %in% c("AGO","BDI","BEN","BFA","BWA","CAF","CIV","CMR","CPV","ETH","GAB","GHA","GNB",
+                                "KEN","KWT","MDG","MLI","MOZ","MUS","MWI","MYT","NGA","RWA","SEN","SLE","STP",
+                                "SYC","TGO","TZA","UGA","ZAF","ZMB","ZWE")] <- "Africa"
+hotel_demand$region[region %in% c("ARE","BHR","COM","DJI","DZA","EGY","IRQ","JOR","LBN","LBY","MAR","MRT",
+                                  "OMN","QAT","SAU","SDN","SYR","TUN")] <- "Arab States"
+hotel_demand$region[region %in% c("ARM","ATA","AZE","BLR","KAZ","NULL","RUS","TJK","UZB")] <- "CIS"
+
+# Divide into training and testing
+set.seed(253)
+hotel_split <- initial_split(hotel_demand, prop = 0.5, 
+                             strata = is_canceled)
+hotel_train <- training(hotel_split)
+hotel_test <- testing(hotel_split)
+
+# Distribution of respone for the training data
+table(hotel_train$is_canceled) %>% prop.table()
+
+# Distribution of respone for testing data
+table(hotel_test$is_canceled) %>% prop.table()
+```
+
+
+### Exploratory Work 
+
+
+### Modeling Process
+
+
+### Results and Next Steps
+
+
