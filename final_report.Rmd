@@ -50,6 +50,8 @@ library(moderndive)
 library(rattle)
 library(fivethirtyeight)
 
+library(bookdown)
+
 theme_set(theme_minimal())
 ```
 
@@ -262,7 +264,7 @@ preds_logistic_best %>%
   auc()
 ```
 
-Our second model is the full logistic regression model with all of our predictors. As seen in our results table down below, this model was one of our poorest performing models in terms of the testing accuracy and the testing AUC. 
+Our second model is the full logistic regression model with all of our predictors. As seen in the confusion matrix and the ROC plot, this model was one of our poorest performing models in terms of the testing accuracy and the testing AUC. The final results table at the end of the paper confirms this as well.
 
 ```{r, echo=FALSE, warning = FALSE}
 # Logistic Regression (all variables)
@@ -307,7 +309,7 @@ preds_logistic %>%
   auc()
 ```
 
-Our third model was a LASSO model where we used all of the predictors in our training set. It had similar results to our full logistic regression model. As seen in the lambda vs. accuracy graph...
+Our third model was a LASSO model where we used all of the predictors in our training set. It had similar results to our full logistic regression model. As seen in the lambda vs. accuracy graph, the accuracy quickly drops off after a cp of .01.
 
 ```{r, echo=FALSE, warning = FALSE}
 # LASSO
@@ -364,6 +366,8 @@ preds_lasso %>%
   auc()
 ```
 
+The fourth model was a classfication tree; this model was our second best model in terms of performance and its accuracy. The cp vs. accuracy plot tells us that the accuracy of our model dips rather swiftly past the best tune cp of 0.0001456348. Furthermore, the ROC curve is bowed out in a way that shows that the true positive rate is greater than the false positive rate at the certain cp points on the graph such as 0.44, 0.35, and 0.26 and so forth.
+
 ```{r, echo=FALSE, warning = FALSE}
 # Classification Tree
 set.seed(253)
@@ -413,6 +417,8 @@ preds_tree %>%
   roc(is_canceled ~ pred_prob, data = .) %>% 
   auc()
 ```
+
+The fifth and final model is our best performing one: the random forest. This model has the highest accuracy and the most bowed out ROC curve which is another signal of the high perforamce capability. The OOB error vs. the number of trees graph tells us that the error flattens out at about forty trees. Overall, this error is rather low (less than 20%), and we know this model isn't overfitted on the training set since its testing accuracy is also fairly high (see Results and Next Steps).
 
 ```{r, echo=FALSE, warning = FALSE}
 # Random Forest
