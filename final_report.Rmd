@@ -9,7 +9,7 @@ abstract: "This report takes an in-depth look at the many factors that influence
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
 ```
 
 ```{r, include=FALSE}
@@ -215,7 +215,7 @@ head(round(H,2))
 ```
 
 
-```{r, fig.width=12, fig.cap="Plot detailing the correlation between individual numeric variables included in the data set. The opacity of the square signifies the magnitude, with blue representing positive correlation and red representing negative correlation."}
+```{r, fig.width=20, fig.cap="Plot detailing the correlation between individual numeric variables included in the data set. The opacity of the square signifies the magnitude, with blue representing positive correlation and red representing negative correlation."}
 
 # Numeric var. correlation plot
 corrplot(H, method = "color")
@@ -226,9 +226,9 @@ corrplot(H, method = "color")
 
 We wanted to create the "best" possible model that would be fit for predicting whether or not a particular reservation would be canceled or not. When we say "best" possible model, we want to have a model that has the highest testing accuracy since the we can measure a model's predictive power based on its performance on the testing data set.
 
-In our study, we created five models with is_canceled as our response variable. These five models (logistic, LASSO, Classifcation Tree, and Random Forest, and a logistic model with seven variables) and their outputs can be seen below. We trained each model on the training set and calculated the training and cv accuracies as well as the areas under each ROC curve. 
+In our study, we created five models with is_canceled as our response variable. These five models (logistic, LASSO, Classifcation Tree, and Random Forest, and a logistic model with seven variables) and their outputs can be seen below. We trained each model on the training set and calculated the training and cv accuracies as well as the areas under each ROC curve. The code chunks below give a run down of all of these metrics which assisted us in our decision to isolate one model as the best one. 
 
-```{r, echo=FALSE}
+```{r, echo = FALSE, warning = FALSE}
 # Logistic Regression (top 7 variables)
 set.seed(253)
 
@@ -272,7 +272,7 @@ preds_logistic_best %>%
   auc()
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning = FALSE}
 # Logistic Regression (all variables)
 set.seed(253)
 
@@ -315,7 +315,7 @@ preds_logistic %>%
   auc()
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning = FALSE}
 # LASSO
 set.seed(253)
 
@@ -370,7 +370,7 @@ preds_lasso %>%
   auc()
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning = FALSE}
 # Classification Tree
 set.seed(253)
 
@@ -420,7 +420,7 @@ preds_tree %>%
   auc()
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning = FALSE}
 # Random Forest
 set.seed(253)
 
@@ -471,6 +471,9 @@ preds_randf %>%
 vip(hotel_randf_oob$finalModel, num_features = 31, bar = FALSE)
 ```
 
+This variable importance plot shows the rankings of each variable's importance for our random forest model. For example, our top-ranked variable is lead_time which coincides with the smallest mean decrese in node impurity (i.e. the highest Gini Index value). So, lead_time creates the most heterogeneous nodes meaning this variable causes the tree to split earlier; it is one of the first branches.
+
+
 ```{r}
 # Partial Dependence Plots
 partial(hotel_randf_oob, pred.var = "lead_time", 
@@ -478,7 +481,7 @@ partial(hotel_randf_oob, pred.var = "lead_time",
   autoplot() 
 ```
 
-
+As aforementioned, the predictor, lead_time, is the most important variable in our random forest model per the variable importance plot above. The partial dependence plot tells us the effect that lead_time has on the probability of a reservation being canceled. For small values of lead time, the y_hat value is close to 1 signaling that these quickly-made reservations will most likely be canceled. The probability of cancelation quickly tapers off as lead time increases which means that reservations made far in advance will most liekly be kept, holding all other predictors constant.
 
 ### Results and Next Steps
 
@@ -491,4 +494,8 @@ partial(hotel_randf_oob, pred.var = "lead_time",
 |hotel_randf_oob    | 0.8358       |  0.8357    | 0.8984 |  0.8375  | 0.7859  |
 |hotel_logistic_best| 0.7355       | 	0.7353    | 0.7931 |  0.7363  | 0.7159  |
 
+
+After completing training and testing for our five models and analysing their summaries, confusion matricies, and ROC plots, we came to the conclusion that our random forest model, hotel_ranf_oob, is our best model as it not only performed the best on the training data set but also performed exceptionally well with the testing data set. In terms of interpretaion, this tree is complex given the number of variables that we implementing into the model; however, combining the natural intuition of trees along with the information that variable importance plots and partial dependence plots give us, we can get a pretty good understanding of our hotel booking situation.
+
+In terms of future work, the idea of clustering caught our eye as a possible next step to further hone our model's predictive performance. The hotel_bookings data set is quite large with over 100,000 observations. Using non-supervised machine learning techniques, like hierarchical clustering, would allow us to narrow this data set into like groups which could allows us to make models that focus on certain elements of a hotel reservation.
 
