@@ -2,8 +2,8 @@
 title: "Final Report"
 author: "Jack Freier and Jackson Henningfield"
 date: "5/3/2020"
-output: html_document
-abstract: "This report takes an in-depth look at the many factors that influence hotel booking cancellations. Using a data set that contains a series of potential explanatory variables, we build and train four models that predict the probability of a guest cancelling their hotel reservation. We then evaluate these models individually and present our findings, justifying our selection of the best model with several performance metrics as well as providing a detailed interpretation of the results."
+output: bookdown::html_document2
+abstract: "This report takes an in-depth look at the many factors that influence hotel booking cancellations. Using a dataset that contains a series of potential explanatory variables, we build and train five models that predict the probability of a guest cancelling their hotel reservation. We then evaluate these models individually and present our findings, justifying our selection of the best model with several performance metrics as well as providing a detailed interpretation of the results."
 ---
 
 ```{r setup, include=FALSE}
@@ -55,7 +55,9 @@ theme_set(theme_minimal())
 
 ### Introduction
 
-```{r}
+The ability to accurately predict the probability of a guest cancelling their reservation has important implications for the hotel industry. Using a set of widely available metrics , in addition to previous observations, we aim to build and evaluate a model that can quickly and accurately make hard predictions for a guest's
+
+```{r, include=FALSE}
 # Reading in the hotel booking demand data
 hotel_demand <- read.csv("hotel_bookings.csv",stringsAsFactors = FALSE)
 
@@ -63,7 +65,7 @@ hotel_demand <- read.csv("hotel_bookings.csv",stringsAsFactors = FALSE)
 hotel_numeric <- hotel_demand %>%
     select(-hotel,-arrival_date_month, -meal, -country, -market_segment, -distribution_channel, 
            -reserved_room_type, -reserved_room_type, -assigned_room_type, -deposit_type, -agent, 
-           -company, -customer_type, -reservation_status_date, -reservation_status
+           -company, -customer_type, -reservation_status_date, -reservation_status, -children
            )
 
 hotel_category <- hotel_demand %>% 
@@ -85,8 +87,9 @@ hotel_demand <- hotel_demand %>%
   ) %>%
   select(
     -arrival_date_year, -arrival_date_month, -arrival_date_day_of_month, -stays_in_week_nights,
-    -previous_bookings_not_canceled, -market_segment, -agent, -company, -reservation_status_date, -assigned_room_type, -reserved_room_type, -previous_cancellations, -required_car_parking_spaces,
-     -deposit_type, -reservation_status, -distribution_channel, -children
+    -previous_bookings_not_canceled, -market_segment, -agent, -company, -reservation_status_date, -assigned_room_type, 
+    -reserved_room_type, -previous_cancellations, -required_car_parking_spaces, -deposit_type, -reservation_status, 
+    -distribution_channel, -children
   )
 
 # Putting all countries into regions based on ITU Region classification
@@ -155,15 +158,9 @@ hotel_train %>%
   ggplot(aes(x = is_canceled, y = booking_changes, color = is_canceled)) +
   geom_count(show.legend = FALSE) +
   labs(x = "Is Canceled", y = "Number of Booking Changes")
-
-hotel_train %>%
-  ggplot(aes(x = arrival_date_week_number, fill = is_canceled)) +
-  geom_histogram(bins = 52) +
-  labs(x = "Arrival Date Week Number", y = "Count", fill = "Is Canceled")
-
 ```
 
-In order to get a broad sense of how each variable influences our response, we first created explanatory plots for hotel cancellations. These plots were split into two categories, one comprising numeric predictors and one categorical predictors. Each visualization gives insight into how that variable proportionally influences cancellations.
+In order to get a broad sense of how each variable influences our response, we first create exploratory plots for hotel cancellations. These plots are split into two categories, one comprising numeric predictors and the other categorical predictors. Each of these visualizations gives insight into how the particular variable of interest proportionally influences cancellations.
 
 ```{r, fig.width=12, fig.height=9, fig.cap="Example exploratory plots for four variables of interest (two numeric, two categorical). (Upper left) The median lead time for cancelled bookings is substantially higher than non-cancelled bookings. (Upper right) There are proportionally more cancellations from week 14 to week 44. (Lower left) There are proportionally more cancellations for bookings where the guest was assigned the correct room. (Lower right) There are proportionally more cancellations for guests who have previously cancelled a hotel booking."}
 
@@ -187,24 +184,15 @@ explanatory_3 <- hotel_train %>%
   geom_bar(position = "fill") +
   labs(x = "Is Canceled", y = "Proportion", fill = "Assigned Correct Room")
 
-
-hotel_train %>% 
-  ggplot(aes(x = as.factor(is_canceled), fill = factor(has_previous_cancellations))) +
-  geom_bar(position = "fill") +
-  labs(x = "Is Canceled", y = "Proportion", fill = "Has Previous Cancellations")
-```
-
-
-```{r}
 explanatory_4 <- hotel_train %>% 
   ggplot(aes(x = as.factor(is_canceled), fill = factor(has_previous_cancellations))) +
   geom_bar(position = "fill") +
   labs(x = "Is Canceled", y = "Proportion", fill = "Has Previous Cancellations")
 
-grid.arrange(explanatory_1, explanatory_2, explanatory_3, explanatory_4, ncol=2)
+grid.arrange(explanatory_1, explanatory_2, explanatory_3, explanatory_4, ncol = 2)
 ```
 
-As a way of narrowing our search process, we also contructed a correlation plot for the numeric predictors. This figure is intended to provide a sense of how highly correlated each variable is with one another, helping us to reduce the pool of potential predictors while safeguarding against multicolinearity. After identifying pairs of variables that were highly correlated, we opted to remove one of the two from the dataset. The particular variables that were removed were ...
+As a way of narrowing our search process, we also construct a correlation plot for the numeric predictors. This figure is intended to provide a sense of how highly correlated each variable is with one another, helping us to reduce the pool of potential predictors while safeguarding against multicollinearity. After identifying pairs of variables that are highly correlated, we opt to remove one of the two from the dataset. Seen in the plot below, the specific pair of predictors that demonstrated the largest correlation value is `previous_bookings_not_canceled` and `is_repeated_guest`, with the former being excluded from the subsequent modeling process.
 
 ```{r, include=FALSE}
 # Making correlation plot for numeric subset
@@ -213,18 +201,20 @@ head(round(H,2))
 ```
 
 
-```{r, fig.width=20, fig.cap="Plot detailing the correlation between individual numeric variables included in the data set. The opacity of the square signifies the magnitude, with blue representing positive correlation and red representing negative correlation."}
+```{r, fig.width=12, fig.height=9, fig.cap="Plot detailing the correlation between individual numeric variables included in the dataset. The opacity of the square signifies the magnitude, with blue representing positive correlation and red representing negative correlation."}
 
 # Numeric var. correlation plot
 corrplot(H, method = "color")
 ```
 
+Lastly, before beginning the modeling process, we manipulate or remove several problematic variables included in the dataset. These variables are characterized by a series of issues, such as extreme crowding of particular categorical levels or numeric values (while other levels or values are very sparsely populated). To account for these deficiencies, we create new variables that aggregate information stored in the previous variables' levels (i.e. turning the `country` variable into a `region` variable based on geographic boundaries).
+
 
 ### Modeling Process
 
-We wanted to create the "best" possible model that would be fit for predicting whether or not a particular reservation would be canceled or not. When we say "best" possible model, we want to have a model that has the highest testing accuracy since the we can measure a model's predictive power based on its performance on the testing data set.
+Our goal is to create the "best" possible model that is fit for predicting whether or not a particular reservation is canceled or not. We define the "best" possible model as that which has the highest testing accuracy, since we can measure a model's predictive power based on its performance on the testing dataset.
 
-In our study, we created five models with is_canceled as our response variable. These five models (logistic, LASSO, Classifcation Tree, and Random Forest, and a logistic model with seven variables) and their outputs can be seen below. We trained each model on the training set and calculated the training and cv accuracies as well as the areas under each ROC curve. The code chunks below give a run down of all of these metrics which assisted us in our decision to isolate one model as the best one. 
+In our study, we created five models with `is_canceled` as our response variable. These five models (logistic regression with seven variables, logistic regression with all variables, LASSO, a classifcation tree, and a random forest) and their outputs can be seen below. We trained each model on the training set and calculated the training and cross-validated accuracies as well as the areas under each ROC curve. The code chunks below give a run down of all of these metrics, all of which assisted us in our decision to isolate one model as the best one. 
 
 Our first model output here is a logistic regression that included our seven most important variables as shown in the random forest variable importance plot (shown later in this report). This model was created in order to ease the interpretation; since this model only has 7 variables compared to the full logistic model, with 14 variables, we thought that this would be a good example of how the number of predictors in a model affects its overall performance.
 
@@ -485,7 +475,7 @@ partial(hotel_randf_oob, pred.var = "lead_time",
   autoplot() 
 ```
 
-As aforementioned, the predictor, lead_time, is the most important variable in our random forest model per the variable importance plot above. The partial dependence plot tells us the effect that lead_time has on the probability of a reservation being canceled. For small values of lead time, the y_hat value is close to 1 signaling that these quickly-made reservations will most likely be canceled. The probability of cancelation quickly tapers off as lead time increases which means that reservations made far in advance will most liekly be kept, holding all other predictors constant.
+As aforementioned, the predictor, lead_time, is the most important variable in our random forest model per the variable importance plot above. The partial dependence plot tells us the effect that lead_time has on the probability of a reservation being canceled, with all other variables being held at their average level. For small values of lead time, the y_hat value is close to one, signaling that these quickly-made reservations are far more likely to be canceled. The probability of cancelation quickly tapers off as lead time increases, meaning that reservations made far in advance will most likely be kept, holding all other predictors constant.
 
 ### Results and Next Steps
 
@@ -499,7 +489,7 @@ As aforementioned, the predictor, lead_time, is the most important variable in o
 |hotel_logistic_best| 0.7355       | 	0.7353    | 0.7931 |  0.7363  | 0.7159  |
 
 
-After completing training and testing for our five models and analysing their summaries, confusion matricies, and ROC plots, we came to the conclusion that our random forest model, hotel_ranf_oob, is our best model as it not only performed the best on the training data set but also performed exceptionally well with the testing data set. In terms of interpretaion, this tree is complex given the number of variables that we implementing into the model; however, combining the natural intuition of trees along with the information that variable importance plots and partial dependence plots give us, we can get a pretty good understanding of our hotel booking situation.
+After completing training and testing for our five models and analysing their summaries, confusion matricies, and ROC plots, we came to the conclusion that the random forest is our best model; it not only performs the best on the training dataset, but also performs exceptionally well on the portion of the data reserved for testing. In terms of interpretaion, this tree is structually complex due to the number of variables that we allow for; however, combining the natural intuition of trees along with the information that variable importance plots and partial dependence plots give us, we are able to provide an intuitive representation of our hotel booking situation.
 
-In terms of future work, the idea of clustering caught our eye as a possible next step to further hone our model's predictive performance. The hotel_bookings data set is quite large with over 100,000 observations. Using non-supervised machine learning techniques, like hierarchical clustering, would allow us to narrow this data set into like groups which could allows us to make models that focus on certain elements of a hotel reservation.
+As for future extentions of our work, the idea of clustering caught our eye as a possible next step to further hone our model's predictive performance. Because hotel bookings dataset is quite large (over 100,000 observations), it is a good candidate for additional inquiries. Using non-supervised machine learning techniques, like hierarchical or k-means clustering, would allow us to divide this dataset into like groups, which could in turn assist in making models that focus on certain elements of a hotel reservation.
 
