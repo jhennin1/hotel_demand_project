@@ -226,6 +226,7 @@ We wanted to create the "best" possible model that would be fit for predicting w
 
 In our study, we created five models with is_canceled as our response variable. These five models (logistic, LASSO, Classifcation Tree, and Random Forest, and a logistic model with seven variables) and their outputs can be seen below. We trained each model on the training set and calculated the training and cv accuracies as well as the areas under each ROC curve. The code chunks below give a run down of all of these metrics which assisted us in our decision to isolate one model as the best one. 
 
+Our first model output here is a logistic regression that included our seven most important variables as shown in the random forest variable importance plot (shown later in this report). This model was created in order to ease the interpretation; since this model only has 7 variables compared to the full logistic model, with 14 variables, we thought that this would be a good example of how the number of predictors in a model affects its overall performance.
 
 ```{r, echo = FALSE, warning = FALSE}
 # Logistic Regression (top 7 variables)
@@ -271,6 +272,8 @@ preds_logistic_best %>%
   auc()
 ```
 
+Our second model is the full logistic regression model with all of our predictors. As seen in our results table down below, this model was one of our poorest performing models in terms of the testing accuracy and the testing AUC. 
+
 ```{r, echo=FALSE, warning = FALSE}
 # Logistic Regression (all variables)
 set.seed(253)
@@ -313,6 +316,8 @@ preds_logistic %>%
   roc(is_canceled ~ pred_prob, data = .) %>% 
   auc()
 ```
+
+Our third model was a LASSO model where we used all of the predictors in our training set. It had similar results to our full logistic regression model. As seen in the lambda vs. accuracy graph...
 
 ```{r, echo=FALSE, warning = FALSE}
 # LASSO
