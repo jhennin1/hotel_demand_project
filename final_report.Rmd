@@ -3,7 +3,7 @@ title: "Final Report"
 author: "Jack Freier and Jackson Henningfield"
 date: "5/3/2020"
 output: bookdown::html_document2
-abstract: "This report takes an in-depth look at the many factors that influence hotel booking cancellations. Using a dataset that contains a series of potential explanatory variables, we build and train five models that predict the probability of a guest cancelling their hotel reservation. We then evaluate these models individually and present our findings, justifying our selection of the best model with several performance metrics as well as providing a detailed interpretation of the results."
+abstract: "This report takes an in-depth look at the many factors that influence hotel booking cancellations. Using data that includes both a series of potential explanatory variables and known observations, we build and train five models that predict the probability of a guest cancelling their hotel reservation. We then evaluate these models individually and present our findings, justifying our selection of the best model with several performance metrics as well as providing a detailed interpretation of the results."
 ---
 
 ```{r setup, include=FALSE}
@@ -53,9 +53,9 @@ library(fivethirtyeight)
 theme_set(theme_minimal())
 ```
 
-### Introduction
+# Introduction
 
-The ability to accurately predict the probability of a guest cancelling their reservation has important implications for the hotel industry. Using a set of widely available metrics , in addition to previous observations, we aim to build and evaluate a model that can quickly and accurately make hard predictions for a guest's
+The ability to accurately assess the likelihood that a given guest cancels their reservation has important implications for the hotel industry. The goal of this paper is to derive a model that, given known values for a series of explanatory variables, can produce the probability of cancellation. We accomplish this via the use of a hotel bookings dataset, which contains just under 120,000 observations across 17 distinct variables. The supervised learning techniques that we utilize in constructing our models are based upon our response variable, `is_canceled`, a binary indicator describing the status of any given hotel booking observation. As a way of approaching this classification problem, we employ several machine learning techniques including logistic regression, decision trees, and random forests.
 
 ```{r, include=FALSE}
 # Reading in the hotel booking demand data
@@ -128,7 +128,7 @@ table(hotel_test$is_canceled) %>% prop.table()
 ```
 
 
-### Exploratory Work 
+# Exploratory Work 
 
 
 ```{r}
@@ -138,10 +138,6 @@ hotel_train %>%
   labs(x = "Is Canceled", y = "Proportion")
 
 # Numeric
-hotel_train %>%
-  ggplot(aes(x = is_canceled, y = lead_time, color = is_canceled)) +
-  geom_boxplot(show.legend = FALSE) +
-  labs(x = "Is Canceled", y = "Lead Time")
 
 hotel_train %>%
   ggplot(aes(x = is_canceled, y = factor(total_of_special_requests), color = is_canceled)) +
@@ -210,7 +206,7 @@ corrplot(H, method = "color")
 Lastly, before beginning the modeling process, we manipulate or remove several problematic variables included in the dataset. These variables are characterized by a series of issues, such as extreme crowding of particular categorical levels or numeric values (while other levels or values are very sparsely populated). To account for these deficiencies, we create new variables that aggregate information stored in the previous variables' levels (i.e. turning the `country` variable into a `region` variable based on geographic boundaries).
 
 
-### Modeling Process
+# Modeling Process
 
 Our goal is to create the "best" possible model that is fit for predicting whether or not a particular reservation is canceled or not. We define the "best" possible model as that which has the highest testing accuracy, since we can measure a model's predictive power based on its performance on the testing dataset.
 
@@ -460,24 +456,26 @@ preds_randf %>%
   auc()
 ```
 
-```{r}
+```{r, fig.cap="Variable importance plot for our random forest model. Illustrates the relative importance of each variable utilized in the random forest. The two variables that stand out the most are `lead_time` and `total_of_special_requests`, with each being dramatically more important than the subsequent four variables."}
 # VIP Plot
-vip(hotel_randf_oob$finalModel, num_features = 31, bar = FALSE)
+vip(hotel_randf_oob$finalModel, num_features = 31, bar = FALSE) + ggtitle("Random Forest - Variable Importance Plot")
 ```
 
 This variable importance plot shows the rankings of each variable's importance for our random forest model. For example, our top-ranked variable is lead_time which coincides with the smallest mean decrese in node impurity (i.e. the highest Gini Index value). So, lead_time creates the most heterogeneous nodes meaning this variable causes the tree to split earlier; it is one of the first branches.
 
 
-```{r}
+```{r, fig.cap="Partial dependence plot for the `lead_time` variable. Larger lead times tend to decrease the probability of a cancellation whereas shorter lead times tend to increase it."}
 # Partial Dependence Plots
 partial(hotel_randf_oob, pred.var = "lead_time", 
         grid.resolution = 50) %>% 
-  autoplot() 
+  autoplot() + 
+  ggtitle("Random Forest - Partial Dependence Plot") +
+  xlab("Lead Time")
 ```
 
-As aforementioned, the predictor, lead_time, is the most important variable in our random forest model per the variable importance plot above. The partial dependence plot tells us the effect that lead_time has on the probability of a reservation being canceled, with all other variables being held at their average level. For small values of lead time, the y_hat value is close to one, signaling that these quickly-made reservations are far more likely to be canceled. The probability of cancelation quickly tapers off as lead time increases, meaning that reservations made far in advance will most likely be kept, holding all other predictors constant.
+As aforementioned, the predictor, `lead_time`, is the most important variable in our random forest model per the variable importance plot above. The partial dependence plot tells us the effect that lead_time has on the probability of a reservation being canceled, with all other variables being held at their average level. For small values of lead time, the y_hat value is close to one, signaling that these quickly-made reservations are far more likely to be canceled. The probability of cancelation quickly tapers off as lead time increases, meaning that reservations made far in advance will most likely be kept, holding all other predictors constant.
 
-### Results and Next Steps
+# Results and Next Steps
 
 
 | Model             | Training Acc.| CV Acc.    |   AUC  | Test Acc.| Test ACU|
