@@ -2,9 +2,7 @@
 title: "Final Report"
 author: "Jack Freier and Jackson Henningfield"
 date: "5/3/2020"
-<<<<<<< HEAD
 output: html_document
-output: bookdown::html_document2
 abstract: "This report takes an in-depth look at the many factors that influence hotel booking cancellations. Using a data set that contains a series of potential explanatory variables, we build and train four models that predict the probability of a guest cancelling their hotel reservation. We then evaluate these models individually and present our findings, justifying our selection of the best model with several performance metrics as well as providing a detailed interpretation of the results."
 
 
@@ -227,6 +225,7 @@ corrplot(H, method = "color")
 We wanted to create the "best" possible model that would be fit for predicting whether or not a particular reservation would be canceled or not. When we say "best" possible model, we want to have a model that has the highest testing accuracy since the we can measure a model's predictive power based on its performance on the testing data set.
 
 In our study, we created five models with is_canceled as our response variable. These five models (logistic, LASSO, Classifcation Tree, and Random Forest, and a logistic model with seven variables) and their outputs can be seen below. We trained each model on the training set and calculated the training and cv accuracies as well as the areas under each ROC curve. The code chunks below give a run down of all of these metrics which assisted us in our decision to isolate one model as the best one. 
+
 
 ```{r, echo = FALSE, warning = FALSE}
 # Logistic Regression (top 7 variables)
