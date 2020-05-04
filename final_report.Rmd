@@ -4,7 +4,7 @@ author: "Jack Freier and Jackson Henningfield"
 date: "5/3/2020"
 output: html_document
 abstract: "This report takes an in-depth look at the many factors that influence hotel booking cancellations. Using a data set that contains a series of potential explanatory variables, we build and train four models that predict the probability of a guest cancelling their hotel reservation. We then evaluate these models individually and present our findings, justifying our selection of the best model with several performance metrics as well as providing a detailed interpretation of the results."
-
+---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
