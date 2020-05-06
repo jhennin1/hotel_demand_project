@@ -232,7 +232,7 @@ confusionMatrix(data = predict(hotel_logistic_7, type = "raw"),
                 positive = "1") 
 ```
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE}
 # ROC curve and AUC for seven var. logistic
 preds_logistic_best <- hotel_train %>% 
   mutate(pred_prob = predict(hotel_logistic_7$finalModel, 
@@ -279,7 +279,7 @@ confusionMatrix(data = predict(hotel_logistic_all, type = "raw"),
                 positive = "1") 
 ```
 
-```{r, echo = FALSE, warning=FALSE}
+```{r, echo = FALSE, message=FALSE}
 # ROC curve and AUC
 preds_logistic <- hotel_train %>% 
   mutate(pred_prob = predict(hotel_logistic_all$finalModel, 
@@ -342,7 +342,7 @@ confusionMatrix(data = predict(hotel_lasso, type = "raw"),
                 positive = "1")
 ```
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE}
 # ROC curve and AUC
 preds_lasso <- hotel_train %>% 
   mutate(pred_prob = predict(hotel_lasso, 
@@ -400,7 +400,7 @@ confusionMatrix(data = predict(hotel_tree, type = "raw"),
                 positive = "1")
 ```
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE}
 # ROC curve and AUC
 preds_tree <- hotel_train %>% 
   mutate(pred_prob = predict(hotel_tree, 
@@ -442,7 +442,7 @@ hotel_randf_oob$results %>%
   select(Accuracy)
 ```
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE}
 # Plot of number of trees vs OOB error
 plot(hotel_randf_oob$finalModel, main = "OOB Error by Number of Trees (Where Error = 1 - Accuracy)")
 
