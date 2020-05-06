@@ -208,7 +208,7 @@ Our first model output here is a logistic regression that included our seven mos
 # Logistic Regression (top 7 variables)
 set.seed(253)
 
-hotel_logistic_best <- train(
+hotel_logistic_7 <- train(
     is_canceled ~ lead_time + total_of_special_requests + adr + assigned_correct_room + booking_changes + 
       arrival_date_week_number + has_previous_cancellations,
     data = hotel_train,
@@ -220,22 +220,22 @@ hotel_logistic_best <- train(
 )
 
 # Model summary
-summary(hotel_logistic_best)
+summary(hotel_logistic_7)
 
 # Cross-validated accuracy
-hotel_logistic_best$results %>%
+hotel_logistic_7$results %>%
   select(Accuracy)
 
 # Confusion matrix
-confusionMatrix(data = predict(hotel_logistic_best, type = "raw"),
+confusionMatrix(data = predict(hotel_logistic_7, type = "raw"),
                 reference = hotel_train$is_canceled,
                 positive = "1") 
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning=FALSE}
 # ROC curve and AUC for seven var. logistic
 preds_logistic_best <- hotel_train %>% 
-  mutate(pred_prob = predict(hotel_logistic_best$finalModel, 
+  mutate(pred_prob = predict(hotel_logistic_7$finalModel, 
                              type = "response"))
 
 preds_logistic_best %>% 
@@ -256,7 +256,7 @@ Our second model is the full logistic regression model with all of our predictor
 # Logistic Regression (all variables)
 set.seed(253)
 
-hotel_logistic <- train(
+hotel_logistic_all <- train(
     is_canceled ~ .,
     data = hotel_train,
     method = "glm",
@@ -267,22 +267,22 @@ hotel_logistic <- train(
 )
 
 # Model summary
-summary(hotel_logistic)
+summary(hotel_logistic_all)
 
 # Cross-validated accuracy
-hotel_logistic$results %>%
+hotel_logistic_all$results %>%
   select(Accuracy)
 
 # Confusion matrix
-confusionMatrix(data = predict(hotel_logistic, type = "raw"),
+confusionMatrix(data = predict(hotel_logistic_all, type = "raw"),
                 reference = hotel_train$is_canceled,
                 positive = "1") 
 ```
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, warning=FALSE}
 # ROC curve and AUC
 preds_logistic <- hotel_train %>% 
-  mutate(pred_prob = predict(hotel_logistic$finalModel, 
+  mutate(pred_prob = predict(hotel_logistic_all$finalModel, 
                              type = "response"))
 
 preds_logistic %>% 
@@ -342,7 +342,7 @@ confusionMatrix(data = predict(hotel_lasso, type = "raw"),
                 positive = "1")
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning=FALSE}
 # ROC curve and AUC
 preds_lasso <- hotel_train %>% 
   mutate(pred_prob = predict(hotel_lasso, 
@@ -400,7 +400,7 @@ confusionMatrix(data = predict(hotel_tree, type = "raw"),
                 positive = "1")
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning=FALSE}
 # ROC curve and AUC
 preds_tree <- hotel_train %>% 
   mutate(pred_prob = predict(hotel_tree, 
@@ -420,7 +420,7 @@ preds_tree %>%
 
 The fifth and final model is our best performing one: the random forest. This model has the highest accuracy and the most bowed out ROC curve which is another signal of the high perforamce capability. The OOB error vs. the number of trees graph tells us that the error flattens out at about forty trees. Overall, this error is rather low (less than 20%), and we know this model isn't overfitted on the training set since its testing accuracy is also fairly high (see Results and Next Steps).
 
-```{r, include=FALSE, cache=TRUE}
+```{r, include=FALSE}
 # Random Forest
 set.seed(253)
 
@@ -442,7 +442,7 @@ hotel_randf_oob$results %>%
   select(Accuracy)
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning=FALSE}
 # Plot of number of trees vs OOB error
 plot(hotel_randf_oob$finalModel, main = "OOB Error by Number of Trees (Where Error = 1 - Accuracy)")
 
@@ -469,7 +469,7 @@ preds_randf %>%
   auc()
 ```
 
-```{r, fig.cap="Variable importance plot for our random forest model. Illustrates the relative importance of each variable utilized in the random forest. The two variables that stand out the most are `lead_time` and `total_of_special_requests`, with each being dramatically more important than the subsequent four variables."}
+```{r, echo = FALSE, fig.cap="Variable importance plot for our random forest model. Illustrates the relative importance of each variable utilized in the random forest. The two variables that stand out the most are `lead_time` and `total_of_special_requests`, with each being dramatically more important than the subsequent four variables."}
 # VIP Plot
 vip(hotel_randf_oob$finalModel, num_features = 31, bar = FALSE) + ggtitle("Random Forest - Variable Importance Plot")
 ```
@@ -477,7 +477,7 @@ vip(hotel_randf_oob$finalModel, num_features = 31, bar = FALSE) + ggtitle("Rando
 This variable importance plot shows the rankings of each variable's importance for our random forest model. For example, our top-ranked variable is lead_time which coincides with the smallest mean decrese in node impurity (i.e. the highest Gini Index value). So, lead_time creates the most heterogeneous nodes meaning this variable causes the tree to split earlier; it is one of the first branches.
 
 
-```{r, fig.cap="Partial dependence plot for the `lead_time` variable. Larger lead times tend to decrease the probability of a cancellation whereas shorter lead times tend to increase it."}
+```{r, echo = FALSE, fig.cap="Partial dependence plot for the `lead_time` variable. Larger lead times tend to decrease the probability of a cancellation whereas shorter lead times tend to increase it."}
 # Partial Dependence Plots
 partial(hotel_randf_oob, pred.var = "lead_time", 
         grid.resolution = 50) %>% 
@@ -490,14 +490,13 @@ As aforementioned, the predictor, `lead_time`, is the most important variable in
 
 # Results and Next Steps
 
-
-| Model             | Training Acc.| CV Acc.    |   AUC  | Test Acc.| Test ACU|
-|-------------------|--------------|------------|--------|----------|---------|
-|hotel_logistic     | 0.7785       |  0.7779    | 0.8191 |  0.7779  | 0.7325  |
-|hotel_lasso        | 0.7785       |  0.7781    | 0.8190 |  0.7778  | 0.7325  |
-|hotel_tree         | 0.8343       |  0.8114    | 0.8796 |  0.8128  | 0.7681  |
-|hotel_randf_oob    | 0.8358       |  0.8357    | 0.8984 |  0.8375  | 0.7859  |
-|hotel_logistic_best| 0.7355       | 	0.7353    | 0.7931 |  0.7363  | 0.7159  |
+| Model             | Training Acc.| CV Acc.   |   AUC  | Test Acc.| Test ACU|
+|-------------------|--------------|-----------|--------|----------|---------|
+|hotel_logistic_7   | 0.7355       | 0.7353    | 0.7931 |  0.7363  | 0.7159  |
+|hotel_logistic_all | 0.7785       | 0.7779    | 0.8191 |  0.7779  | 0.7325  |
+|hotel_lasso        | 0.7785       | 0.7781    | 0.8190 |  0.7778  | 0.7325  |
+|hotel_tree         | 0.8343       | 0.8114    | 0.8796 |  0.8128  | 0.7681  |
+|hotel_randf_oob    | 0.8358       | 0.8357    | 0.8984 |  0.8375  | 0.7859  |
 
 
 After completing training and testing for our five models and analysing their summaries, confusion matricies, and ROC plots, we came to the conclusion that the random forest is our best model; it not only performs the best on the training dataset, but also performs exceptionally well on the portion of the data reserved for testing. In terms of interpretaion, this tree is structually complex due to the number of variables that we allow for; however, combining the natural intuition of trees along with the information that variable importance plots and partial dependence plots give us, we are able to provide an intuitive representation of our hotel booking situation.
