@@ -7,7 +7,7 @@ abstract: "This report takes an in-depth look at the many factors that influence
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, messages = FALSE)
 ```
 
 ```{r, include=FALSE}
@@ -146,34 +146,9 @@ split_dist %>%
 
 # Exploratory Work 
 
-```{r}
-hotel_train %>% 
-  ggplot(aes(x = is_canceled, fill = region)) +
-  geom_bar(position = "fill") +
-  labs(x = "Is Canceled", y = "Proportion")
-
-# Numeric
-
-hotel_train %>%
-  ggplot(aes(x = is_canceled, y = factor(total_of_special_requests), color = is_canceled)) +
-  geom_count(show.legend = FALSE) +
-  labs(x = "Is Canceled", y = "Total Number of Special Requests")
-
-hotel_train %>%
-  filter(adr < 5400) %>%
-  ggplot(aes(x = is_canceled, y = adr, color = is_canceled)) +
-  geom_boxplot(show.legend = FALSE) +
-  labs(x = "Is Canceled", y = "Average Daily Rate")
-
-hotel_train %>%
-  ggplot(aes(x = is_canceled, y = booking_changes, color = is_canceled)) +
-  geom_count(show.legend = FALSE) +
-  labs(x = "Is Canceled", y = "Number of Booking Changes")
-```
-
 In order to get a broad sense of how each variable influences our response, we first create exploratory plots for hotel cancellations. These plots are split into two categories, one comprising numeric predictors and the other categorical predictors. Each of these visualizations gives insight into how the particular variable of interest proportionally influences cancellations.
 
-```{r, fig.width=12, fig.height=9, fig.cap="Example exploratory plots for four variables of interest (two numeric, two categorical). (Upper left) The median lead time for cancelled bookings is substantially higher than non-cancelled bookings. (Upper right) There are proportionally more cancellations from week 14 to week 44. (Lower left) There are proportionally more cancellations for bookings where the guest was assigned the correct room. (Lower right) There are proportionally more cancellations for guests who have previously cancelled a hotel booking."}
+```{r, echo = FALSE, fig.width=12, fig.height=9, fig.cap="Example exploratory plots for four variables of interest (two numeric, two categorical). (Upper left) The median lead time for cancelled bookings is substantially higher than non-cancelled bookings. (Upper right) There are proportionally more cancellations from week 14 to week 44. (Lower left) There are proportionally more cancellations for bookings where the guest was assigned the correct room. (Lower right) There are proportionally more cancellations for guests who have previously cancelled a hotel booking."}
 
 # Numeric
 explanatory_1 <- hotel_train %>%
@@ -191,14 +166,14 @@ explanatory_2 <- hotel_train %>%
 
 # Categorical
 explanatory_3 <- hotel_train %>% 
-  ggplot(aes(x = as.factor(is_canceled), fill = factor(assigned_correct_room))) +
+  ggplot(aes(x = factor(assigned_correct_room), fill = as.factor(is_canceled))) +
   geom_bar(position = "fill") +
-  labs(x = "Is Canceled", y = "Proportion", fill = "Assigned Correct Room")
+  labs(x = "Assigned Correct Room", y = "Proportion", fill = "Is Canceled")
 
 explanatory_4 <- hotel_train %>% 
-  ggplot(aes(x = as.factor(is_canceled), fill = factor(has_previous_cancellations))) +
+  ggplot(aes(x = factor(has_previous_cancellations), fill = as.factor(is_canceled))) +
   geom_bar(position = "fill") +
-  labs(x = "Is Canceled", y = "Proportion", fill = "Has Previous Cancellations")
+  labs(x = "Has Previous Cancellations", y = "Proportion", fill = "Is Canceled")
 
 grid.arrange(explanatory_1, explanatory_2, explanatory_3, explanatory_4, ncol = 2)
 ```
@@ -212,7 +187,7 @@ head(round(H,2))
 ```
 
 
-```{r, fig.width=12, fig.height=9, fig.cap="Plot detailing the correlation between individual numeric variables included in the dataset. The opacity of the square signifies the magnitude, with blue representing positive correlation and red representing negative correlation."}
+```{r, echo = FALSE, fig.width=12, fig.height=9, fig.cap="Plot detailing the correlation between individual numeric variables included in the dataset. The opacity of the square signifies the magnitude, with blue representing positive correlation and red representing negative correlation."}
 
 # Numeric var. correlation plot
 corrplot(H, method = "color")
