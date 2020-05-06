@@ -204,7 +204,7 @@ In our study, we created five models with `is_canceled` as our response variable
 
 Our first model output here is a logistic regression that included our seven most important variables as shown in the random forest variable importance plot (shown later in this report). This model was created in order to ease the interpretation; since this model only has 7 variables compared to the full logistic model, with 14 variables, we thought that this would be a good example of how the number of predictors in a model affects its overall performance.
 
-```{r, echo = FALSE, warning = FALSE}
+```{r, include=FALSE}
 # Logistic Regression (top 7 variables)
 set.seed(253)
 
@@ -230,8 +230,10 @@ hotel_logistic_best$results %>%
 confusionMatrix(data = predict(hotel_logistic_best, type = "raw"),
                 reference = hotel_train$is_canceled,
                 positive = "1") 
+```
 
-# ROC curve and AUC
+```{r, echo=FALSE}
+# ROC curve and AUC for seven var. logistic
 preds_logistic_best <- hotel_train %>% 
   mutate(pred_prob = predict(hotel_logistic_best$finalModel, 
                              type = "response"))
@@ -250,7 +252,7 @@ preds_logistic_best %>%
 
 Our second model is the full logistic regression model with all of our predictors. As seen in the confusion matrix and the ROC plot, this model was one of our poorest performing models in terms of the testing accuracy and the testing AUC. The final results table at the end of the paper confirms this as well.
 
-```{r, echo=FALSE, warning = FALSE}
+```{r, include=FALSE}
 # Logistic Regression (all variables)
 set.seed(253)
 
@@ -275,7 +277,9 @@ hotel_logistic$results %>%
 confusionMatrix(data = predict(hotel_logistic, type = "raw"),
                 reference = hotel_train$is_canceled,
                 positive = "1") 
+```
 
+```{r, echo = FALSE}
 # ROC curve and AUC
 preds_logistic <- hotel_train %>% 
   mutate(pred_prob = predict(hotel_logistic$finalModel, 
@@ -295,7 +299,7 @@ preds_logistic %>%
 
 Our third model was a LASSO model where we used all of the predictors in our training set. It had similar results to our full logistic regression model. As seen in the lambda vs. accuracy graph, the accuracy quickly drops off after a cp of .01.
 
-```{r, echo=FALSE, warning = FALSE}
+```{r, include=FALSE}
 # LASSO
 set.seed(253)
 
@@ -312,14 +316,18 @@ hotel_lasso <- train(
     metric = "Accuracy",
     na.action = na.omit
 )
+```
 
+```{r, echo=FALSE}
 # Plot of lambda vs accuracy
 hotel_lasso$results %>% 
   ggplot(aes(x = lambda, y = Accuracy)) +
   geom_line(size = 1.05) +
   scale_x_log10() +
   labs(x = "Lambda", y = "Accuracy")
+```
 
+```{r, include = FALSE}
 # Best value of lambda
 hotel_lasso$bestTune$lambda
 
@@ -332,7 +340,9 @@ hotel_lasso$results %>%
 confusionMatrix(data = predict(hotel_lasso, type = "raw"),
                 reference = hotel_train$is_canceled,
                 positive = "1")
+```
 
+```{r, echo=FALSE}
 # ROC curve and AUC
 preds_lasso <- hotel_train %>% 
   mutate(pred_prob = predict(hotel_lasso, 
@@ -352,7 +362,7 @@ preds_lasso %>%
 
 The fourth model was a classfication tree; this model was our second best model in terms of performance and its accuracy. The cp vs. accuracy plot tells us that the accuracy of our model dips rather swiftly past the best tune cp of 0.0001456348. Furthermore, the ROC curve is bowed out in a way that shows that the true positive rate is greater than the false positive rate at the certain cp points on the graph such as 0.44, 0.35, and 0.26 and so forth.
 
-```{r, echo=FALSE, warning = FALSE}
+```{r, include=FALSE}
 # Classification Tree
 set.seed(253)
 
@@ -365,13 +375,17 @@ hotel_tree <- train(
   metric = "Accuracy",
   na.action = na.omit
 )
+```
 
+```{r, echo=FALSE}
 # Plot of cp vs accuracy
 hotel_tree$results %>%
   ggplot(aes(x = cp, y = Accuracy)) +
   geom_line(size = 1.05) +
   labs(x = "cp", y = "Accuracy")
+```
 
+```{r, include=FALSE}
 # Best cp value
 hotel_tree$bestTune$cp
 
@@ -384,7 +398,9 @@ hotel_tree$results %>%
 confusionMatrix(data = predict(hotel_tree, type = "raw"),
                 reference = hotel_train$is_canceled,
                 positive = "1")
+```
 
+```{r, echo=FALSE}
 # ROC curve and AUC
 preds_tree <- hotel_train %>% 
   mutate(pred_prob = predict(hotel_tree, 
@@ -404,7 +420,7 @@ preds_tree %>%
 
 The fifth and final model is our best performing one: the random forest. This model has the highest accuracy and the most bowed out ROC curve which is another signal of the high perforamce capability. The OOB error vs. the number of trees graph tells us that the error flattens out at about forty trees. Overall, this error is rather low (less than 20%), and we know this model isn't overfitted on the training set since its testing accuracy is also fairly high (see Results and Next Steps).
 
-```{r, echo=FALSE, warning = FALSE}
+```{r, include=FALSE, cache=TRUE}
 # Random Forest
 set.seed(253)
 
@@ -420,13 +436,16 @@ hotel_randf_oob <- train(
   na.action = na.omit
 )
 
-# Plot of number of trees vs OOB error
-plot(hotel_randf_oob$finalModel, main = "OOB Error by Number of Trees (Where Error = 1 - Accuracy)")
-
 # Accuracy associated with the best model
 hotel_randf_oob$results %>%
   filter(Accuracy == max(Accuracy)) %>%
   select(Accuracy)
+```
+
+```{r, echo=FALSE}
+# Plot of number of trees vs OOB error
+plot(hotel_randf_oob$finalModel, main = "OOB Error by Number of Trees (Where Error = 1 - Accuracy)")
+
 
 # Confusion matrix
 confusionMatrix(data = predict(hotel_randf_oob, type = "raw"),
