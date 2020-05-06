@@ -57,7 +57,7 @@ theme_set(theme_minimal())
 
 # Introduction
 
-The ability to accurately assess the likelihood that a given guest cancels their reservation has important implications for the hotel industry. The goal of this paper is to derive a model that, given known values for a series of explanatory variables, can produce the probability of cancellation. We accomplish this via the use of a hotel bookings dataset, which contains just under 120,000 observations across 17 distinct variables. The supervised learning techniques that we utilize in constructing our models are based upon our response variable, `is_canceled`, a binary indicator describing the status of any given hotel booking observation. As a way of approaching this classification problem, we employ several machine learning techniques including logistic regression, decision trees, and random forests.
+The ability to accurately assess the likelihood that a given guest cancels their reservation has important implications for the hotel industry. The goal of this paper is to derive a model that, given known values for a series of explanatory variables, can produce the probability of cancellation. We accomplish this via the use of a hotel bookings dataset, which contains just under 120,000 observations across 17 distinct variables. The supervised learning techniques that we utilize in constructing our models are based upon our response variable, `is_canceled`, a binary indicator describing the status of any given hotel booking observation. As a way of approaching this classification problem, we employ several machine learning techniques including logistic regression, LASSO, decision trees, and random forests. Before attempting any of these approaches, we first partition the data into two sets of observations, one for training the models and one for evaluating them. The plot below shows the distribution of the response variable, `is_canceled`, for both of these training and testing subsets. It should be noted that both have extremely similar distributions of the response variable, with about 37% of the observations being cancellations (indicated by an `is_canceled` value of one). Furthermore, this suggests that any model we produce should have an accuracy greater than 63%, as any accuracy lower than this would be outperformed by a model that simply predicts an `is_canceled` value of zero for every observation.
 
 ```{r, include=FALSE}
 # Reading in the hotel booking demand data
@@ -129,9 +129,22 @@ table(hotel_train$is_canceled) %>% prop.table()
 table(hotel_test$is_canceled) %>% prop.table()
 ```
 
+```{r, echo = FALSE, fig.cap="Proportion of the `is_canceled` response variable for both the training and testing datasets. The exact proportion of cancelled hotel bookings for both subsets is 0.3704."}
+split_dist <- tibble(
+  Training = hotel_train$is_canceled,
+  Testing = hotel_test$is_canceled
+)
+
+split_dist <- pivot_longer(data = split_dist, cols = c("Training", "Testing"), names_to = "Set")
+
+split_dist %>%
+  ggplot(aes(x = Set, fill = is_canceled)) +
+  geom_bar(position = "fill") +
+  labs(x = "Subset", y = "Proportion", fill = "Is Canceled") +
+  ggtitle("Proportion of the Response for Training and Testing Datasets")
+```
 
 # Exploratory Work 
-
 
 ```{r}
 hotel_train %>% 
