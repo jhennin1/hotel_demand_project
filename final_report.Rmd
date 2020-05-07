@@ -244,13 +244,15 @@ preds_logistic_best %>%
            linealpha = .5, pointalpha = .8) +
   geom_abline(slope = 1, intercept = 0, color = "gray") +
   labs(x = "False Positive Fraction", y = "True Positive Fraction")
+```
 
+```{r, include=FALSE}
 preds_logistic_best %>%
   roc(is_canceled ~ pred_prob, data = .) %>% 
   auc()
 ```
 
-Our second model is the full logistic regression model with all of our predictors. As seen in the confusion matrix and the ROC plot, this model was one of our poorest performing models in terms of the testing accuracy and the testing AUC. The final results table at the end of the paper confirms this as well.
+Our second model is the full logistic regression model with all of our predictors. This model was one of our poorest performing models in terms of the testing accuracy and the testing AUC. The final results table at the end of the paper confirms this as well.
 
 ```{r, include=FALSE}
 # Logistic Regression (all variables)
@@ -291,7 +293,9 @@ preds_logistic %>%
            linealpha = .5, pointalpha = .8) +
   geom_abline(slope = 1, intercept = 0, color = "gray") +
   labs(x = "False Positive Fraction", y = "True Positive Fraction")
+```
 
+```{r, include=FALSE}
 preds_logistic %>%
   roc(is_canceled ~ pred_prob, data = .) %>% 
   auc()
@@ -354,7 +358,9 @@ preds_lasso %>%
            linealpha = .5, pointalpha = .8) +
   geom_abline(slope = 1, intercept = 0, color = "gray") +
   labs(x = "False Positive Fraction", y = "True Positive Fraction")
+```
 
+```{r, include=FALSE}
 preds_lasso %>%
   roc(is_canceled ~ pred_prob, data = .) %>% 
   auc()
@@ -412,7 +418,9 @@ preds_tree %>%
            linealpha = .5, pointalpha = .8) +
   geom_abline(slope = 1, intercept = 0, color = "gray") +
   labs(x = "False Positive Fraction", y = "True Positive Fraction")
+```
 
+```{r, include=FALSE}
 preds_tree %>%
   roc(is_canceled ~ pred_prob, data = .) %>% 
   auc()
@@ -463,7 +471,9 @@ preds_randf %>%
            linealpha = .5, pointalpha = .8) +
   geom_abline(slope = 1, intercept = 0, color = "gray") +
   labs(x = "False Positive Fraction", y = "True Positive Fraction")
+```
 
+```{r, include=FALSE}
 preds_randf %>%
   roc(is_canceled ~ pred_prob, data = .) %>% 
   auc()
